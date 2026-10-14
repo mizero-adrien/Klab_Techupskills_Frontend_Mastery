@@ -1,9 +1,10 @@
 import { Smartphone } from "lucide-react";
 import type { Deal } from "../../data/Home";
-
-const money = (n: number) => `Rwf${n.toLocaleString("en-Rw")}`;
+import { useCart } from "../../context/CartContext";
+import { money } from "../../utils/money";
 
 function ProductCard({ deal }: { deal: Deal }) {
+  const { addToCart } = useCart();
   const discount = Math.round(((deal.oldPrice - deal.price) / deal.oldPrice) * 100);
   const saved = deal.oldPrice - deal.price;
 
@@ -27,6 +28,14 @@ function ProductCard({ deal }: { deal: Deal }) {
         <p className="border-t border-slate-100 pt-2 font-medium text-green-600">
           Save - {money(saved)}
         </p>
+
+        <button
+          type="button"
+          onClick={() => addToCart(deal)}
+          className="mt-2 w-full rounded-md bg-brand py-1.5 text-xs font-medium text-white hover:opacity-90"
+        >
+          Add to cart
+        </button>
       </div>
     </article>
   );

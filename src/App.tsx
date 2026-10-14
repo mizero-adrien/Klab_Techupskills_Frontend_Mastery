@@ -6,8 +6,11 @@ import LoginPage from "./pages/LoginPage";
 import CartPage from "./pages/CartPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
+
+
 function App() {
   return (
+  
     <Routes>
       <Route element={<MainLayout />}>
         <Route path="/" element={<HomePage />} />
@@ -17,6 +20,7 @@ function App() {
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
+
   );
 }
 

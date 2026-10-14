@@ -1,8 +1,11 @@
 import { Link } from "react-router";
 import { Menu, Search, SlidersHorizontal, ShoppingCart, User } from "lucide-react";
 import { BRAND_NAME } from "../../config/brand";
+import { useCart } from "../../context/CartContext";
 
 function Header() {
+  const { totalItems } = useCart();
+
   return (
     <header className="border-b border-slate-100 bg-white">
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-4">
@@ -36,7 +39,14 @@ function Header() {
           </Link>
           <span className="h-6 w-px bg-slate-200" />
           <Link to="/cart" className="flex items-center gap-2 hover:text-brand">
-            <ShoppingCart size={18} className="text-brand" />
+            <span className="relative">
+              <ShoppingCart size={18} className="text-brand" />
+              {totalItems > 0 && (
+                <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white">
+                  {totalItems}
+                </span>
+              )}
+            </span>
             <span className="hidden sm:inline">Cart</span>
           </Link>
         </nav>

@@ -1,0 +1,1 @@
+export const money = (n: number) => `Rwf ${n.toLocaleString("en-RW")}`;

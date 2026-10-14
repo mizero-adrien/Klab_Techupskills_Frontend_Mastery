@@ -41,3 +41,11 @@ input {
   --color-card-yellow: #fef3c8;
   --color-card-peach: #ffeddf;
 }
+
+@layer base {
+  button:not(:disabled),
+  [role="button"],
+  [role="tab"] {
+    cursor: pointer;
+  }
+}

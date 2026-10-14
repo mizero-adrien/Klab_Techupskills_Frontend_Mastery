@@ -64,6 +64,22 @@ export const dailyEssentials = [
 ];
 
 export const footerLinks = {
-  popular: ["Staples", "Beverages", "Personal Care", "Home Care", "Baby Care", "Vegetables & Fruits", "Snacks & Foods", "Dairy & Bakery"],
-  service: ["About Us", "Terms & Conditions", "FAQ", "Privacy Policy", "E-waste Policy", "Cancellation & Return Policy"],
+  popular: [
+    "Staples",
+    "Beverages",
+    "Personal Care",
+    "Home Care",
+    "Baby Care",
+    "Vegetables & Fruits",
+    "Snacks & Foods",
+    "Dairy & Bakery",
+  ],
+  service: [
+    "About Us",
+    "Terms & Conditions",
+    "FAQ",
+    "Privacy Policy",
+    "E-waste Policy",
+    "Cancellation & Return Policy",
+  ],
 };

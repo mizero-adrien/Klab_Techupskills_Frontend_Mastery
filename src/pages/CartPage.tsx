@@ -1,10 +1,12 @@
 import { Link } from "react-router";
 import { Minus, Plus, Smartphone, Trash2 } from "lucide-react";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 import { money } from "../utils/money";
 
 function CartPage() {
   const { items, totalItems, totalPrice, changeQuantity, removeFromCart } = useCart();
+  const { user, openLogin } = useAuth();
 
   if (items.length === 0) {
     return (
@@ -100,12 +102,16 @@ function CartPage() {
             </div>
           </dl>
 
-          <Link
-            to="/login"
-            className="mt-5 block rounded-md bg-brand py-2.5 text-center text-sm font-medium text-white hover:opacity-90"
+          <button
+            type="button"
+            onClick={() => {
+              if (!user) openLogin();
+              // when signed in, we'll send the user to checkout later
+            }}
+            className="mt-5 block w-full rounded-md bg-brand py-2.5 text-center text-sm font-medium text-white hover:opacity-90"
           >
             Proceed to checkout
-          </Link>
+          </button>
           <Link
             to="/products"
             className="mt-3 block text-center text-xs font-medium text-brand hover:underline"

@@ -32,7 +32,13 @@ export const smartphoneDeals: Deal[] = [
 ];
 export type IconItem = { label: string; icon: LucideIcon };
 
-export const topCategories: IconItem[] = [
+
+export type CategoryItem = {
+  label: string;
+  icon: LucideIcon;
+};
+
+export const topCategories: CategoryItem[] = [
   { label: "Mobile", icon: Smartphone },
   { label: "Cosmetics", icon: Sparkles },
   { label: "Electronics", icon: Tv },
@@ -48,7 +54,7 @@ export const topBrands = [
   { name: "Xiaomi", offer: "UP to 80% OFF", bg: "bg-orange-100", text: "text-slate-800" },
 ];
 
-export const dailyEssentials: (IconItem & { offer: string })[] = [
+export const dailyEssentials = [
   { label: "Daily Essentials", icon: ShoppingBasket, offer: "UP to 50% OFF" },
   { label: "Vegetables", icon: Carrot, offer: "UP to 50% OFF" },
   { label: "Fruits", icon: Apple, offer: "UP to 50% OFF" },

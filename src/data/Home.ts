@@ -25,11 +25,11 @@ export type Deal = {
 
 
 export const smartphoneDeals: Deal[] = [
-  { id: 1, name: "Galaxy S22 Ultra", price: 32999, oldPrice: 74999 },
-  { id: 2, name: "Galaxy M13 (4GB | 64 GB)", price: 10499, oldPrice: 14999 },
-  { id: 3, name: "Galaxy M33 (4GB | 64 GB)", price: 16999, oldPrice: 24999 },
-  { id: 4, name: "Galaxy M53 (4GB | 64 GB)", price: 31999, oldPrice: 40999 },
-  { id: 5, name: "Galaxy S22 Ultra", price: 67999, oldPrice: 85999 },
+  { id: 1, name: "Galaxy S22 Ultra", price: 32999, oldPrice: 74999, image: "/images/products/samsung-galaxy-s22-5g.jpg" },
+  { id: 2, name: "Galaxy M13 (4GB | 64 GB)", price: 10499, oldPrice: 14999, image: "/images/products/samsung-galaxy-m13.jpg" },
+  { id: 3, name: "Galaxy M33 (4GB | 64 GB)", price: 16999, oldPrice: 24999, image: "/images/products/samsung-galaxy-m33.jpg" },
+  { id: 4, name: "Galaxy M53 (4GB | 64 GB)", price: 31999, oldPrice: 40999, image: "/images/products/samsung-galaxy-m53.jpg" },
+  { id: 5, name: "Galaxy S22 Ultra", price: 67999, oldPrice: 85999, image: "/images/products/samsung-galaxy-s22-5g.jpg" },
 ];
 export type IconItem = { label: string; icon: LucideIcon };
 
@@ -37,17 +37,19 @@ export type IconItem = { label: string; icon: LucideIcon };
 export type CategoryItem = {
   label: string;
   icon: LucideIcon;
+  image?: string;
 };
 
 export const topCategories: CategoryItem[] = [
-  { label: "Mobile", icon: Smartphone },
-  { label: "Cosmetics", icon: Sparkles },
-  { label: "Electronics", icon: Tv },
-  { label: "Furniture", icon: Armchair },
-  { label: "Watches", icon: Watch },
-  { label: "Decor", icon: Flower2 },
-  { label: "Accessories", icon: Gem },
+  { label: "Mobile", icon: Smartphone, image: "/images/categories/mobile.jpg" },
+  { label: "Cosmetics", icon: Sparkles, image: "/images/categories/cosmetics.jpg" },
+  { label: "Electronics", icon: Tv, image: "/images/categories/electronics.jpg" },
+  { label: "Furniture", icon: Armchair, image: "/images/categories/furniture.jpg" },
+  { label: "Watches", icon: Watch, image: "/images/categories/watches.jpg" },
+  { label: "Decor", icon: Flower2, image: "/images/categories/decor.jpg" },
+  { label: "Accessories", icon: Gem, image: "/images/categories/accessories.jpg" },
 ];
+
 
 export const topBrands = [
   { name: "iPhone", offer: "UP to 80% OFF", bg: "bg-slate-800", text: "text-white" },

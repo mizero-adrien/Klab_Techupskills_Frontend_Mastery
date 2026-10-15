@@ -6,7 +6,7 @@ type CartItem = { product: Deal; quantity: number };
 
 type CartContextValue = {
   items: CartItem[];
-  addToCart: (product: Deal) => void;
+  addToCart: (product: Deal, quantity?: number) => void;
   changeQuantity: (id: number, delta: number) => void;
   removeFromCart: (id: number) => void;
   totalItems: number;
@@ -18,17 +18,17 @@ const CartContext = createContext<CartContextValue | null>(null);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useLocalStorage<CartItem[]>("cart", []);
 
-  const addToCart = (product: Deal) => {
-    setItems((current) => {
-      const existing = current.find((i) => i.product.id === product.id);
-      if (existing) {
-        return current.map((i) =>
-          i.product.id === product.id ? { ...i, quantity: i.quantity + 1 } : i
-        );
-      }
-      return [...current, { product, quantity: 1 }];
-    });
-  };
+  const addToCart = (product: Deal, quantity = 1) => {
+  setItems((current) => {
+    const existing = current.find((i) => i.product.id === product.id);
+    if (existing) {
+      return current.map((i) =>
+        i.product.id === product.id ? { ...i, quantity: i.quantity + quantity } : i
+      );
+    }
+    return [...current, { product, quantity }];
+  });
+};
 
   const changeQuantity = (id: number, delta: number) => {
     setItems((current) =>

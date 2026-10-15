@@ -31,6 +31,7 @@ export const smartphoneDeals: Deal[] = [
   { id: 4, name: "Galaxy M53 (4GB | 64 GB)", price: 31999, oldPrice: 40999, image: "/images/products/samsung-galaxy-m53.jpg" },
   { id: 5, name: "Galaxy S22 Ultra", price: 67999, oldPrice: 85999, image: "/images/products/samsung-galaxy-s22-5g.jpg" },
 ];
+
 export type IconItem = { label: string; icon: LucideIcon };
 
 
@@ -90,15 +91,15 @@ export const footerLinks = {
 export type Product = Deal & { category: string };
 
 export const products: Product[] = [
-  { id: 1, name: "Galaxy S22 Ultra", price: 32999, oldPrice: 74999, category: "mobile", image: "/images/products/samsung-galaxy-s22-5g.jpg" },
-  { id: 2, name: "Galaxy M13 (4GB | 64 GB)", price: 10499, oldPrice: 14999, category: "mobile", image: "/images/products/samsung-galaxy-m13.jpg" },
-  { id: 3, name: "Galaxy M33 (4GB | 64 GB)", price: 16999, oldPrice: 24999, category: "mobile", image: "/images/products/samsung-galaxy-m33.jpg" },
-  { id: 4, name: "Smart Watch Pro", price: 4999, oldPrice: 9999, category: "watches", image: "/images/products/itel-smart-watch-1.jpg" },
-  { id: 5, name: "Fitness Band 5", price: 1999, oldPrice: 3999, category: "watches" },
+  { id: 101, name: "Galaxy S22 Ultra", price: 32999, oldPrice: 74999, category: "mobile", image: "/images/products/samsung-galaxy-s22-5g.jpg" },
+  { id: 102, name: "Galaxy M13 (4GB | 64 GB)", price: 10499, oldPrice: 14999, category: "mobile", image: "/images/products/samsung-galaxy-m13.jpg" },
+  { id: 103, name: "Galaxy M33 (4GB | 64 GB)", price: 16999, oldPrice: 24999, category: "mobile", image: "/images/products/samsung-galaxy-m33.jpg" },
+  { id: 104, name: "Smart Watch Pro", price: 4999, oldPrice: 9999, category: "watches", image: "/images/products/itel-smart-watch-1.jpg" },
+  { id: 105, name: "Fitness Band 5", price: 1999, oldPrice: 3999, category: "watches" },
   { id: 6, name: "Smart TV 43 inch", price: 24999, oldPrice: 34999, category: "electronics" },
   { id: 7, name: "Bluetooth Speaker", price: 1499, oldPrice: 2999, category: "electronics" },
   { id: 8, name: "Wooden Armchair", price: 8999, oldPrice: 12999, category: "furniture" },
-    { id: 9, name: "Fresh Vegetable Basket", price: 1200, oldPrice: 1800, category: "groceries" },
+  { id: 9, name: "Fresh Vegetable Basket", price: 1200, oldPrice: 1800, category: "groceries" },
   { id: 10, name: "Mango Box (1kg)", price: 900, oldPrice: 1400, category: "fruits" },
   { id: 11, name: "Strawberry Pack", price: 1100, oldPrice: 1600, category: "fruits" },
   { id: 12, name: "Non-stick Pan Set", price: 6500, oldPrice: 9500, category: "kitchen" },
@@ -107,6 +108,7 @@ export const products: Product[] = [
   { id: 15, name: "Cordless Drill", price: 18000, oldPrice: 25000, category: "improvement" },
   { id: 16, name: "Football", price: 2800, oldPrice: 4200, category: "sports" },
 ];
+
 
 export const navCategories = [
   {

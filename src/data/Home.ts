@@ -20,6 +20,7 @@ export type Deal = {
   name: string;
   price: number;
   oldPrice: number;
+  image?: string;
 };
 
 
@@ -87,10 +88,10 @@ export const footerLinks = {
 export type Product = Deal & { category: string };
 
 export const products: Product[] = [
-  { id: 1, name: "Galaxy S22 Ultra", price: 32999, oldPrice: 74999, category: "mobile" },
-  { id: 2, name: "Galaxy M13 (4GB | 64 GB)", price: 10499, oldPrice: 14999, category: "mobile" },
-  { id: 3, name: "Galaxy M33 (4GB | 64 GB)", price: 16999, oldPrice: 24999, category: "mobile" },
-  { id: 4, name: "Smart Watch Pro", price: 4999, oldPrice: 9999, category: "watches" },
+  { id: 1, name: "Galaxy S22 Ultra", price: 32999, oldPrice: 74999, category: "mobile", image: "/images/products/samsung-galaxy-s22-5g.jpg" },
+  { id: 2, name: "Galaxy M13 (4GB | 64 GB)", price: 10499, oldPrice: 14999, category: "mobile", image: "/images/products/samsung-galaxy-m13.jpg" },
+  { id: 3, name: "Galaxy M33 (4GB | 64 GB)", price: 16999, oldPrice: 24999, category: "mobile", image: "/images/products/samsung-galaxy-m33.jpg" },
+  { id: 4, name: "Smart Watch Pro", price: 4999, oldPrice: 9999, category: "watches", image: "/images/products/itel-smart-watch-1.jpg" },
   { id: 5, name: "Fitness Band 5", price: 1999, oldPrice: 3999, category: "watches" },
   { id: 6, name: "Smart TV 43 inch", price: 24999, oldPrice: 34999, category: "electronics" },
   { id: 7, name: "Bluetooth Speaker", price: 1499, oldPrice: 2999, category: "electronics" },

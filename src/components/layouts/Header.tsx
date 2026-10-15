@@ -1,16 +1,19 @@
-import { Link } from "react-router";
-import { Menu, Search, SlidersHorizontal, ShoppingCart, User } from "lucide-react";
+import { Link, useSearchParams } from "react-router";
+import { Menu, ShoppingCart, User } from "lucide-react";
 import { BRAND_NAME } from "../../config/brand";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
+import SearchBar from "./SearchBar";
 
 function Header() {
   const { totalItems } = useCart();
   const { user, openLogin, logout } = useAuth();
+  const [searchParams] = useSearchParams();
+  const urlQuery = searchParams.get("q") ?? "";
 
   return (
     <header className="border-b border-slate-100 bg-white">
-      <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-4">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-4 py-4">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -24,14 +27,8 @@ function Header() {
           </Link>
         </div>
 
-        <div className="mx-auto hidden w-full max-w-xl items-center gap-2 rounded-xl bg-brand-soft px-4 py-2.5 md:flex">
-          <Search size={18} className="text-brand" />
-          <input
-            type="text"
-            placeholder="Search essentials, groceries and more..."
-            className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
-          />
-          <SlidersHorizontal size={18} className="text-brand" />
+        <div className="order-last w-full md:order-none md:mx-auto md:max-w-xl md:flex-1">
+          <SearchBar key={urlQuery} initialQuery={urlQuery} />
         </div>
 
         <nav className="ml-auto flex items-center gap-5 text-sm font-semibold">

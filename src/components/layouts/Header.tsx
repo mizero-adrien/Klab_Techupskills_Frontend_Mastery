@@ -13,7 +13,7 @@ function Header() {
 
   return (
     <header className="border-b border-slate-100 bg-white">
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-4 py-4">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-3 px-4 py-4">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -27,11 +27,11 @@ function Header() {
           </Link>
         </div>
 
-        <div className="order-last w-full md\:order-none md:mx-auto md:max-w-xl md:flex-1">
+        <div className="w-full max-md:order-last md:mx-auto md:max-w-2xl md:flex-1">
           <SearchBar key={urlQuery} initialQuery={urlQuery} />
         </div>
 
-        <nav className="ml-auto flex items-center gap-5 text-sm font-semibold">
+        <nav className="flex items-center gap-5 text-sm font-semibold max-md:ml-auto">
           {user ? (
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-2">

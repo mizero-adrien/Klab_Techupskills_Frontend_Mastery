@@ -106,12 +106,50 @@ export const products: Product[] = [
 ];
 
 export const navCategories = [
-  { label: "Groceries", slug: "groceries" },
-  { label: "Premium Fruits", slug: "fruits" },
-  { label: "Home & Kitchen", slug: "kitchen" },
-  { label: "Fashion", slug: "fashion" },
-  { label: "Electronics", slug: "electronics" },
-  { label: "Beauty", slug: "beauty" },
-  { label: "Home Improvement", slug: "improvement" },
-  { label: "Sports, Toys & Luggage", slug: "sports" },
+  {
+    label: "Groceries",
+    slug: "groceries",
+    children: [{ label: "Vegetables", term: "vegetable" }],
+  },
+  {
+    label: "Premium Fruits",
+    slug: "fruits",
+    children: [
+      { label: "Mango", term: "mango" },
+      { label: "Strawberry", term: "strawberry" },
+    ],
+  },
+  {
+    label: "Home & Kitchen",
+    slug: "kitchen",
+    children: [{ label: "Pans & Cookware", term: "pan" }],
+  },
+  {
+    label: "Fashion",
+    slug: "fashion",
+    children: [{ label: "T-Shirts", term: "shirt" }],
+  },
+  {
+    label: "Electronics",
+    slug: "electronics",
+    children: [
+      { label: "Televisions", term: "tv" },
+      { label: "Speakers", term: "speaker" },
+    ],
+  },
+  {
+    label: "Beauty",
+    slug: "beauty",
+    children: [{ label: "Moisturizers", term: "moisturizer" }],
+  },
+  {
+    label: "Home Improvement",
+    slug: "improvement",
+    children: [{ label: "Drills", term: "drill" }],
+  },
+  {
+    label: "Sports, Toys & Luggage",
+    slug: "sports",
+    children: [{ label: "Football", term: "football" }],
+  },
 ];

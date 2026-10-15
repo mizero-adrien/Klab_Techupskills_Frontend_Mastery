@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
+import { useLocalStorage } from "../hooks/useLocalStorage";
 
 type User = { name: string; email: string };
 
@@ -14,7 +15,7 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useLocalStorage<User | null>("user", null);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
 
   const openLogin = useCallback(() => setIsLoginOpen(true), []);

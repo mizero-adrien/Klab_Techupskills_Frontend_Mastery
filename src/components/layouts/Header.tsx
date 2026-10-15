@@ -27,7 +27,7 @@ function Header() {
           </Link>
         </div>
 
-        <div className="order-last w-full md:order-none md:mx-auto md:max-w-xl md:flex-1">
+        <div className="order-last w-full md\:order-none md:mx-auto md:max-w-xl md:flex-1">
           <SearchBar key={urlQuery} initialQuery={urlQuery} />
         </div>
 

@@ -2,7 +2,7 @@ import { useSearchParams } from "react-router";
 import ProductCard from "../components/Home/ProductCard";
 import { products } from "../data/Home";
 
-const categories = ["all", "mobile", "watches", "electronics", "furniture"];
+const categories = ["all", ...Array.from(new Set(products.map((p) => p.category)))];
 
 function ProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams();

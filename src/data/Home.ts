@@ -95,4 +95,23 @@ export const products: Product[] = [
   { id: 6, name: "Smart TV 43 inch", price: 24999, oldPrice: 34999, category: "electronics" },
   { id: 7, name: "Bluetooth Speaker", price: 1499, oldPrice: 2999, category: "electronics" },
   { id: 8, name: "Wooden Armchair", price: 8999, oldPrice: 12999, category: "furniture" },
+    { id: 9, name: "Fresh Vegetable Basket", price: 1200, oldPrice: 1800, category: "groceries" },
+  { id: 10, name: "Mango Box (1kg)", price: 900, oldPrice: 1400, category: "fruits" },
+  { id: 11, name: "Strawberry Pack", price: 1100, oldPrice: 1600, category: "fruits" },
+  { id: 12, name: "Non-stick Pan Set", price: 6500, oldPrice: 9500, category: "kitchen" },
+  { id: 13, name: "Cotton T-Shirt", price: 2500, oldPrice: 4000, category: "fashion" },
+  { id: 14, name: "Face Moisturizer", price: 3200, oldPrice: 4500, category: "beauty" },
+  { id: 15, name: "Cordless Drill", price: 18000, oldPrice: 25000, category: "improvement" },
+  { id: 16, name: "Football", price: 2800, oldPrice: 4200, category: "sports" },
+];
+
+export const navCategories = [
+  { label: "Groceries", slug: "groceries" },
+  { label: "Premium Fruits", slug: "fruits" },
+  { label: "Home & Kitchen", slug: "kitchen" },
+  { label: "Fashion", slug: "fashion" },
+  { label: "Electronics", slug: "electronics" },
+  { label: "Beauty", slug: "beauty" },
+  { label: "Home Improvement", slug: "improvement" },
+  { label: "Sports, Toys & Luggage", slug: "sports" },
 ];

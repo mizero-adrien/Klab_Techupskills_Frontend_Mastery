@@ -24,13 +24,6 @@ export type Deal = {
 };
 
 
-export const smartphoneDeals: Deal[] = [
-  { id: 1, name: "Galaxy S22 Ultra", price: 32999, oldPrice: 74999, image: "/images/products/samsung-galaxy-s22-5g.jpg" },
-  { id: 2, name: "Galaxy M13 (4GB | 64 GB)", price: 10499, oldPrice: 14999, image: "/images/products/samsung-galaxy-m13.jpg" },
-  { id: 3, name: "Galaxy M33 (4GB | 64 GB)", price: 16999, oldPrice: 24999, image: "/images/products/samsung-galaxy-m33.jpg" },
-  { id: 4, name: "Galaxy M53 (4GB | 64 GB)", price: 31999, oldPrice: 40999, image: "/images/products/samsung-galaxy-m53.jpg" },
-  { id: 5, name: "Galaxy S22 Ultra", price: 67999, oldPrice: 85999, image: "/images/products/samsung-galaxy-s22-5g.jpg" },
-];
 
 export type IconItem = { label: string; icon: LucideIcon };
 
@@ -94,6 +87,8 @@ export const products: Product[] = [
   { id: 101, name: "Galaxy S22 Ultra", price: 32999, oldPrice: 74999, category: "mobile", image: "/images/products/samsung-galaxy-s22-5g.jpg" },
   { id: 102, name: "Galaxy M13 (4GB | 64 GB)", price: 10499, oldPrice: 14999, category: "mobile", image: "/images/products/samsung-galaxy-m13.jpg" },
   { id: 103, name: "Galaxy M33 (4GB | 64 GB)", price: 16999, oldPrice: 24999, category: "mobile", image: "/images/products/samsung-galaxy-m33.jpg" },
+  { id: 106, name: "Galaxy M53 (4GB | 64 GB)", price: 31999, oldPrice: 40999, category: "mobile", image: "/images/products/samsung-galaxy-m53.jpg" },
+  { id: 107, name: "Galaxy S22 Ultra (256 GB)", price: 67999, oldPrice: 85999, category: "mobile", image: "/images/products/samsung-galaxy-s22-5g.jpg" },
   { id: 104, name: "Smart Watch Pro", price: 4999, oldPrice: 9999, category: "watches", image: "/images/products/itel-smart-watch-1.jpg" },
   { id: 105, name: "Fitness Band 5", price: 1999, oldPrice: 3999, category: "watches" },
   { id: 6, name: "Smart TV 43 inch", price: 24999, oldPrice: 34999, category: "electronics" },
@@ -108,6 +103,10 @@ export const products: Product[] = [
   { id: 15, name: "Cordless Drill", price: 18000, oldPrice: 25000, category: "improvement" },
   { id: 16, name: "Football", price: 2800, oldPrice: 4200, category: "sports" },
 ];
+
+export const smartphoneDeals = products
+  .filter((p) => p.category === "mobile")
+  .slice(0, 5);
 
 
 export const navCategories = [

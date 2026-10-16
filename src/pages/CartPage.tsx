@@ -1,5 +1,5 @@
-import { Link } from "react-router";
-import { Minus, Plus, Smartphone, Trash2 } from "lucide-react";
+import { Link, useNavigate } from "react-router";
+import { Minus, Plus, Trash2 } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { money } from "../utils/money";
@@ -8,6 +8,7 @@ import ProductImage from "../components/ui/ProductsImage";
 function CartPage() {
   const { items, totalItems, totalPrice, changeQuantity, removeFromCart } = useCart();
   const { user, openLogin } = useAuth();
+  const navigate = useNavigate();
 
   if (items.length === 0) {
     return (
@@ -40,12 +41,20 @@ function CartPage() {
         <ul className="divide-y divide-slate-100 self-start rounded-lg border border-slate-100">
           {items.map(({ product, quantity }) => (
             <li key={product.id} className="flex items-center gap-4 p-4">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-400">
-                <Smartphone size={28} strokeWidth={1} />
-              </div>
+              <ProductImage
+                src={product.image}
+                alt=""
+                iconSize={24}
+                className="h-16 w-16 shrink-0 rounded-md bg-slate-100 p-1"
+              />
 
               <div className="flex-1">
-                <p className="text-sm font-medium text-slate-800">{product.name}</p>
+                <Link
+                  to={`/products/${product.id}`}
+                  className="text-sm font-medium text-slate-800 hover:text-brand"
+                >
+                  {product.name}
+                </Link>
                 <p className="text-xs text-slate-500">{money(product.price)} each</p>
               </div>
 
@@ -105,10 +114,7 @@ function CartPage() {
 
           <button
             type="button"
-            onClick={() => {
-              if (!user) openLogin();
-              // when signed in, we'll send the user to checkout later
-            }}
+            onClick={() => (user ? navigate("/checkout") : openLogin())}
             className="mt-5 block w-full rounded-md bg-brand py-2.5 text-center text-sm font-medium text-white hover:opacity-90"
           >
             Proceed to checkout

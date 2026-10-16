@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { Smartphone } from "lucide-react";
 import SectionHeading from "./SectionHeading";
+import ProductImage from "../ui/ProductsImage";
 import { topBrands } from "../../data/Home";
 
 function TopBrands() {
@@ -13,15 +14,22 @@ function TopBrands() {
           <Link
             key={brand.name}
             to="/products"
-            className={`flex items-center justify-between rounded-xl p-5 ${brand.bg} ${brand.text}`}
+            className={`flex items-center justify-between gap-4 overflow-hidden rounded-xl p-5 ${brand.bg} ${brand.text}`}
           >
             <div>
-              <p className="text-sm font-semibold">{brand.name}</p>
+              <p className="text-lg font-semibold">{brand.name}</p>
               <p className="mt-6 rounded-full bg-white/90 px-3 py-1 text-[11px] font-medium text-slate-800">
                 {brand.offer}
               </p>
             </div>
-            <Smartphone size={72} strokeWidth={1} className="opacity-70" />
+
+            <ProductImage
+              src={brand.image}
+              alt=""
+              blend={false}
+              className="h-32 w-28 shrink-0"
+              fallback={<Smartphone size={72} strokeWidth={1} className="opacity-70" />}
+            />
           </Link>
         ))}
       </div>

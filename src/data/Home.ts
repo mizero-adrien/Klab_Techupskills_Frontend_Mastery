@@ -46,18 +46,18 @@ export const topCategories: CategoryItem[] = [
 
 
 export const topBrands = [
-  { name: "iPhone", offer: "UP to 80% OFF", bg: "bg-slate-800", text: "text-white" },
-  { name: "realme", offer: "UP to 80% OFF", bg: "bg-amber-100", text: "text-slate-800" },
-  { name: "Xiaomi", offer: "UP to 80% OFF", bg: "bg-orange-100", text: "text-slate-800" },
+  { name: "iPhone", offer: "UP to 80% OFF", bg: "bg-slate-800", text: "text-white", image: "/images/brands/iphone.jpg" },
+  { name: "realme", offer: "UP to 80% OFF", bg: "bg-amber-100", text: "text-slate-800", image: "/images/brands/realme.jpg" },
+  { name: "Xiaomi", offer: "UP to 80% OFF", bg: "bg-orange-100", text: "text-slate-800", image: "/images/brands/xiaomi.png" },
 ];
 
 export const dailyEssentials = [
-  { label: "Daily Essentials", icon: ShoppingBasket, offer: "UP to 50% OFF" },
-  { label: "Vegetables", icon: Carrot, offer: "UP to 50% OFF" },
-  { label: "Fruits", icon: Apple, offer: "UP to 50% OFF" },
-  { label: "Strawberry", icon: Cherry, offer: "UP to 50% OFF" },
-  { label: "Mango", icon: Citrus, offer: "UP to 50% OFF" },
-  { label: "Cherry", icon: Cherry, offer: "UP to 50% OFF" },
+  { label: "Daily Essentials", icon: ShoppingBasket, offer: "UP to 50% OFF", image: "/images/essentials/daily-essentials.jpg" },
+  { label: "Vegetables", icon: Carrot, offer: "UP to 50% OFF", image: "/images/essentials/vegetables.jpg" },
+  { label: "Fruits", icon: Apple, offer: "UP to 50% OFF", image: "/images/essentials/fruits.jpg" },
+  { label: "Strawberry", icon: Cherry, offer: "UP to 50% OFF", image: "/images/essentials/strawberry.jpg" },
+  { label: "Mango", icon: Citrus, offer: "UP to 50% OFF", image: "/images/essentials/mango.jpg" },
+  { label: "Cherry", icon: Cherry, offer: "UP to 50% OFF", image: "/images/essentials/cherry.jpg" },
 ];
 
 export const footerLinks = {

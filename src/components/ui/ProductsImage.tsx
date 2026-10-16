@@ -7,6 +7,7 @@ type ProductImageProps = {
   className?: string;
   iconSize?: number;
   fit?: "contain" | "cover";
+  blend?: boolean;
   fallback?: ReactNode;
 };
 
@@ -16,6 +17,7 @@ function ProductImage({
   className = "",
   iconSize = 40,
   fit = "contain",
+  blend = true,
   fallback,
 }: ProductImageProps) {
   const [failed, setFailed] = useState(false);
@@ -28,15 +30,16 @@ function ProductImage({
     );
   }
 
+  const fitClass =
+    fit === "cover" ? "object-cover" : `object-contain ${blend ? "mix-blend-multiply" : ""}`;
+
   return (
     <img
       src={src}
       alt={alt}
       loading="lazy"
       onError={() => setFailed(true)}
-      className={`${
-        fit === "cover" ? "object-cover" : "object-contain mix-blend-multiply"
-      } ${className}`}
+      className={`${fitClass} ${className}`}
     />
   );
 }

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import SectionHeading from "./SectionHeading";
+import ProductImage from "../ui/ProductsImage";
 import { dailyEssentials } from "../../data/Home";
 
 function DailyEssentials() {
@@ -10,26 +11,41 @@ function DailyEssentials() {
       <SectionHeading title="Daily" highlight="Essentials" />
 
       <div className="grid grid-cols-3 gap-4 sm:grid-cols-6">
-        {dailyEssentials.map(({ label, icon: Icon, offer }, i) => (
-          <button
-            key={label}
-            type="button"
-            onClick={() => setActive(i)}
-            className="flex flex-col items-center gap-2 text-center"
-          >
-            <span
-              className={`flex h-24 w-full items-center justify-center rounded-lg border bg-slate-100 ${
-                i === active
-                  ? "border-brand text-brand"
-                  : "border-transparent text-slate-500"
-              }`}
+        {dailyEssentials.map(({ label, icon: Icon, offer, image }, i) => {
+          const isActive = i === active;
+
+          return (
+            <button
+              key={`${label}-${i}`}
+              type="button"
+              onClick={() => setActive(i)}
+              aria-pressed={isActive}
+              className="group flex flex-col items-center gap-2 text-center"
             >
-              <Icon size={40} strokeWidth={1.25} />
-            </span>
-            <span className="text-xs font-medium text-slate-700">{label}</span>
-            <span className="text-[11px] font-medium text-green-600">{offer}</span>
-          </button>
-        ))}
+              <span
+                className={`block h-24 w-full overflow-hidden rounded-lg border bg-slate-100 transition-colors ${
+                  isActive ? "border-brand" : "border-transparent group-hover:border-brand/40"
+                }`}
+              >
+                <ProductImage
+                  src={image}
+                  alt=""
+                  fit="cover"
+                  className="h-full w-full"
+                  fallback={
+                    <Icon
+                      size={40}
+                      strokeWidth={1.25}
+                      className={isActive ? "text-brand" : "text-slate-500"}
+                    />
+                  }
+                />
+              </span>
+              <span className="text-xs font-medium text-slate-700">{label}</span>
+              <span className="text-[11px] font-medium text-green-600">{offer}</span>
+            </button>
+          );
+        })}
       </div>
     </section>
   );

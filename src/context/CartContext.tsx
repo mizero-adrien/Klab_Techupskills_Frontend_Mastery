@@ -1,14 +1,14 @@
 import { createContext, useContext, type ReactNode } from "react";
-import type { Deal } from "../data/Home";
+import type { Product } from "../lib/toProducts";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 
-export type CartItem = { product: Deal; quantity: number };
+export type CartItem = { product: Product; quantity: number };
 
 type CartContextValue = {
   items: CartItem[];
-  addToCart: (product: Deal, quantity?: number) => void;
-  changeQuantity: (id: number, delta: number) => void;
-  removeFromCart: (id: number) => void;
+  addToCart: (product: Product, quantity?: number) => void;
+  changeQuantity: (id: string, delta: number) => void;
+  removeFromCart: (id: string) => void;
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
@@ -19,7 +19,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useLocalStorage<CartItem[]>("cart", []);
 
-  const addToCart = (product: Deal, quantity = 1) => {
+  const addToCart = (product: Product, quantity = 1) => {
     setItems((current) => {
       const existing = current.find((i) => i.product.id === product.id);
       if (existing) {
@@ -31,7 +31,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const changeQuantity = (id: number, delta: number) => {
+  const changeQuantity = (id: string, delta: number) => {
     setItems((current) =>
       current
         .map((i) => (i.product.id === id ? { ...i, quantity: i.quantity + delta } : i))
@@ -39,7 +39,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
   };
 
-  const removeFromCart = (id: number) => {
+  const removeFromCart = (id: string) => {
     setItems((current) => current.filter((i) => i.product.id !== id));
   };
 

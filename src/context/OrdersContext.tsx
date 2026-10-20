@@ -4,6 +4,7 @@ import type { CartItem } from "./CartContext";
 
 export type Order = {
   id: string;
+  userEmail: string;
   createdAt: string;
   items: CartItem[];
   total: number;

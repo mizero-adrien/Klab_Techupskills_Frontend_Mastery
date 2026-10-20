@@ -26,7 +26,7 @@ function CartPage() {
   }
 
   const originalTotal = items.reduce(
-    (sum, { product, quantity }) => sum + product.oldPrice * quantity,
+    (sum, { product, quantity }) => sum + (product.oldPrice ?? product.price) * quantity,
     0
   );
   const totalSavings = originalTotal - totalPrice;

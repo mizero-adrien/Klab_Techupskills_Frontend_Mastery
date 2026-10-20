@@ -34,10 +34,10 @@ function Header() {
         <nav className="flex items-center gap-5 text-sm font-semibold max-md:ml-auto">
           {user ? (
             <div className="flex items-center gap-3">
-              <span className="flex items-center gap-2">
-                <User size={18} className="text-brand" />
-                <span className="hidden sm:inline">Hi, {user.name}</span>
-              </span>
+              <Link to="/account" className="flex items-center gap-2 hover:text-brand">
+  <User size={18} className="text-brand" />
+  <span className="hidden sm:inline">Hi, {user.name}</span>
+</Link>
               <button
                 type="button"
                 onClick={logout}

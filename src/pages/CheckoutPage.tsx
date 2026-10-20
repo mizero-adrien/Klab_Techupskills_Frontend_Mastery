@@ -119,7 +119,7 @@ function CheckoutPage() {
   }
 
   const originalTotal = items.reduce(
-    (sum, { product, quantity }) => sum + product.oldPrice * quantity,
+    (sum, { product, quantity }) => sum + (product.oldPrice ?? product.price) * quantity,
     0
   );
   const savings = originalTotal - totalPrice;
@@ -132,17 +132,18 @@ function CheckoutPage() {
     if (Object.keys(found).length > 0) return;
 
     const orderId = placeOrder({
-      items,
-      total: totalPrice,
-      savings,
-      payment: values.payment,
-      delivery: {
-        fullName: values.fullName.trim(),
-        phone: values.phone.trim(),
-        address: values.address.trim(),
-        city: values.city.trim(),
-      },
-    });
+  userEmail: user.email,
+  items,
+  total: totalPrice,
+  savings,
+  payment: values.payment,
+  delivery: {
+    fullName: values.fullName.trim(),
+    phone: values.phone.trim(),
+    address: values.address.trim(),
+    city: values.city.trim(),
+  },
+});
 
     navigate(`/order-success/${orderId}`, { replace: true });
     clearCart();

@@ -1,10 +1,13 @@
-import { useEffect, useRef, useState, type MouseEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { Link, useLocation, useSearchParams } from "react-router";
 import { ChevronDown, LayoutGrid } from "lucide-react";
-import { navCategories } from "../../data/Home";
+import { useCategories } from "../../hooks/useCategories";
+import { useProducts } from "../../hooks/useProducts";
+import { slugify } from "../../utils/slug";
 
 const VISIBLE_COUNT = 6;
 const PANEL_WIDTH = 256; // matches w-64 below
+const MAX_CHILDREN = 6;
 
 type OpenMenu = { slug: string; left: number };
 
@@ -16,7 +19,28 @@ function Navbar() {
   const [menu, setMenu] = useState<OpenMenu | null>(null);
   const navRef = useRef<HTMLElement>(null);
   const isOpen = menu !== null;
-  const openCategory = menu ? navCategories.find((c) => c.slug === menu.slug) : undefined;
+
+  const { data: categories, isPending: categoriesPending } = useCategories();
+  const { data: products } = useProducts();
+
+  // The API stores categories flat, so the dropdown items are the products
+  // inside each category. They link to a search inside that category.
+  const navCategories = useMemo(
+    () =>
+      (categories ?? []).map((category) => ({
+        label: category.name,
+        slug: slugify(category.name),
+        children: (products ?? [])
+          .filter((product) => product.categorySlug === slugify(category.name))
+          .slice(0, MAX_CHILDREN)
+          .map((product) => ({ label: product.name, term: product.name })),
+      })),
+    [categories, products]
+  );
+
+  const openCategory = menu
+    ? navCategories.find((c) => c.slug === menu.slug)
+    : undefined;
 
   const visibleCategories = navCategories.slice(0, VISIBLE_COUNT);
   const hasMore = navCategories.length > VISIBLE_COUNT;
@@ -68,6 +92,14 @@ function Navbar() {
         onScroll={() => setMenu(null)}
         className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-4 py-2.5"
       >
+        {categoriesPending && (
+          <div className="flex gap-2" aria-busy="true">
+            {Array.from({ length: VISIBLE_COUNT }, (_, i) => (
+              <div key={i} className="h-9 w-28 shrink-0 animate-pulse rounded-full bg-slate-100" />
+            ))}
+          </div>
+        )}
+
         {visibleCategories.map(({ label, slug }) => {
           const isActive = slug === activeSlug;
           const isThisOpen = slug === menu?.slug;
@@ -127,19 +159,21 @@ function Navbar() {
             All {openCategory.label}
           </Link>
 
-          <ul className="mt-1 border-t border-slate-100 pt-1">
-            {openCategory.children.map((child) => (
-              <li key={child.term}>
-                <Link
-                  to={`/products?category=${openCategory.slug}&q=${encodeURIComponent(child.term)}`}
-                  onClick={() => setMenu(null)}
-                  className="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-brand-soft hover:text-brand"
-                >
-                  {child.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
+          {openCategory.children.length > 0 && (
+            <ul className="mt-1 border-t border-slate-100 pt-1">
+              {openCategory.children.map((child) => (
+                <li key={child.term}>
+                  <Link
+                    to={`/products?category=${openCategory.slug}&q=${encodeURIComponent(child.term)}`}
+                    onClick={() => setMenu(null)}
+                    className="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-brand-soft hover:text-brand"
+                  >
+                    {child.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
     </nav>

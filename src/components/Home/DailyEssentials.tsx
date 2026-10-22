@@ -1,7 +1,7 @@
 import { useState } from "react";
 import SectionHeading from "./SectionHeading";
-import ProductImage from "../ui/ProductsImage";
-import { dailyEssentials } from "../../data/Home";
+import ProductImage from "../ui/ProductImage";
+import { dailyEssentials } from "../../data/marketing";
 
 function DailyEssentials() {
   const [active, setActive] = useState(0);

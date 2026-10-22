@@ -1,28 +1,24 @@
 import { useQuery } from "@tanstack/react-query";
-import { api, ApiError } from "../lib/api";
+import { ApiError } from "../services/api";
+import { productService } from "../services/productService";
+import { queryKeys } from "../lib/queryKeys";
 import { toProduct } from "../lib/toProducts";
 import type { ApiProduct } from "../types/product";
-
-export const productKeys = {
-  all: ["products"] as const,
-  list: () => [...productKeys.all, "list"] as const,
-  detail: (id: string) => [...productKeys.all, "detail", id] as const,
-};
 
 const toProducts = (list: ApiProduct[]) => list.map(toProduct);
 
 export function useProducts() {
   return useQuery({
-    queryKey: productKeys.list(),
-    queryFn: ({ signal }) => api<ApiProduct[]>("/products", { signal }),
+    queryKey: queryKeys.products.lists(),
+    queryFn: ({ signal }) => productService.getProducts(signal),
     select: toProducts,
   });
 }
 
 export function useProduct(id: string | undefined) {
   return useQuery({
-    queryKey: productKeys.detail(id ?? ""),
-    queryFn: ({ signal }) => api<ApiProduct>(`/products/${id}`, { signal }),
+    queryKey: queryKeys.products.detail(id ?? ""),
+    queryFn: ({ signal }) => productService.getProduct(id as string, signal),
     select: toProduct,
     enabled: Boolean(id),
     retry: (failureCount, error) =>

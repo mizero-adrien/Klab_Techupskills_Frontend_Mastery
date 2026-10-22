@@ -3,7 +3,7 @@ import toast from "react-hot-toast";
 import type { Product } from "../../lib/toProducts";
 import { useCart } from "../../context/CartContext";
 import { money } from "../../utils/money";
-import ProductImage from "../ui/ProductsImage";
+import ProductImage from "../ui/ProductImage";
 
 function ProductCard({ product }: { product: Product }) {
   const { addToCart } = useCart();

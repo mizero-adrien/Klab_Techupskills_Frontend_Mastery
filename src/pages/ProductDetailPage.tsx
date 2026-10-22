@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { Minus, Plus } from "lucide-react";
 import { useProduct, useProducts } from "../hooks/useProducts";
-import { ApiError } from "../lib/api";
+import { ApiError } from "../services/api";
 import type { Product } from "../lib/toProducts";
 import { useCart } from "../context/CartContext";
 import { money } from "../utils/money";
-import ProductImage from "../components/ui/ProductsImage";
+import ProductImage from "../components/ui/ProductImage";
 import ProductCard from "../components/Home/ProductCard";
 import QueryError from "../components/ui/QueryError";
 

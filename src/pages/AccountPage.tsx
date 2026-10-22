@@ -1,21 +1,86 @@
 import { Link, useNavigate } from "react-router";
 import { ChevronDown, PackageOpen } from "lucide-react";
+import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
-import { useOrders, type Order } from "../context/OrdersContext";
+import { useMyOrders } from "../hooks/useOrders";
+import { useProducts } from "../hooks/useProducts";
 import { money } from "../utils/money";
-import ProductImage from "../components/ui/ProductsImage";
+import ProductImage from "../components/ui/ProductImage";
+import QueryError from "../components/ui/QueryError";
+import type { Order } from "../lib/toOrders";
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString("en-RW", { dateStyle: "medium" });
 
+const STATUS_STYLES: Record<Order["status"], string> = {
+  pending: "bg-amber-50 text-amber-700",
+  paid: "bg-blue-50 text-blue-700",
+  shipped: "bg-indigo-50 text-indigo-700",
+  delivered: "bg-green-50 text-green-700",
+  cancelled: "bg-red-50 text-red-700",
+};
+
+const STATUS_LABELS: Record<Order["status"], string> = {
+  pending: "Pending",
+  paid: "Paid",
+  shipped: "Shipped",
+  delivered: "Delivered",
+  cancelled: "Cancelled",
+};
+
 function OrderCard({ order }: { order: Order }) {
   const { addToCart } = useCart();
+  const { data: products } = useProducts();
   const navigate = useNavigate();
   const itemCount = order.items.reduce((sum, i) => sum + i.quantity, 0);
 
   const buyAgain = () => {
-    order.items.forEach(({ product, quantity }) => addToCart(product, quantity));
+    if (!products) {
+      toast.error("Please wait for products to load and try again.");
+      return;
+    }
+
+    const byId = new Map(products.map((p) => [p.id, p]));
+    const skipped: string[] = [];
+    let addedCount = 0;
+
+    for (const item of order.items) {
+      const current = byId.get(item.productId);
+      if (!current) {
+        skipped.push(`${item.productName} (no longer available)`);
+        continue;
+      }
+      if (current.stock <= 0) {
+        skipped.push(`${current.name} (out of stock)`);
+        continue;
+      }
+
+      const qty = Math.min(item.quantity, current.stock);
+      if (qty <= 0) {
+        skipped.push(`${current.name} (out of stock)`);
+        continue;
+      }
+
+      addToCart(current, qty);
+      addedCount += qty;
+
+      if (qty < item.quantity) {
+        skipped.push(`${current.name} (only ${qty} added)`);
+      }
+    }
+
+    if (addedCount > 0) {
+      toast.success("Items added to your cart.");
+    }
+    if (skipped.length > 0) {
+      toast.error(`Some items were skipped: ${skipped.slice(0, 2).join(", ")}${skipped.length > 2 ? "..." : ""}`);
+    }
+    if (addedCount === 0 && skipped.length === 0) {
+      toast.error("No items could be added.");
+      return;
+    }
+
     navigate("/cart");
   };
 
@@ -28,7 +93,10 @@ function OrderCard({ order }: { order: Order }) {
             {formatDate(order.createdAt)} · {itemCount} {itemCount === 1 ? "item" : "items"}
           </p>
         </div>
-        <p className="text-sm font-semibold text-slate-900">{money(order.total)}</p>
+        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[order.status]}`}>
+          {STATUS_LABELS[order.status]}
+        </span>
+        <p className="text-sm font-semibold text-slate-900">{money(order.totalAmount)}</p>
         <ChevronDown
           size={18}
           className="text-slate-400 transition-transform group-open:rotate-180"
@@ -37,19 +105,19 @@ function OrderCard({ order }: { order: Order }) {
 
       <div className="border-t border-slate-100 p-4">
         <ul className="divide-y divide-slate-100">
-          {order.items.map(({ product, quantity }) => (
-            <li key={product.id} className="flex items-center gap-3 py-3">
+          {order.items.map((item) => (
+            <li key={item.productId} className="flex items-center gap-3 py-3">
               <ProductImage
-                src={product.image}
+                src={item.productImage}
                 alt=""
                 iconSize={20}
                 className="h-12 w-12 shrink-0 rounded-md bg-slate-100 p-1"
               />
               <p className="flex-1 text-sm text-slate-800">
-                {product.name} <span className="text-slate-500">× {quantity}</span>
+                {item.productName} <span className="text-slate-500">× {item.quantity}</span>
               </p>
               <p className="text-sm font-semibold text-slate-900">
-                {money(product.price * quantity)}
+                {money(item.priceAtPurchase * item.quantity)}
               </p>
             </li>
           ))}
@@ -64,7 +132,7 @@ function OrderCard({ order }: { order: Order }) {
           </div>
           <div>
             <p className="font-semibold text-slate-800">Payment</p>
-            <p>{order.payment === "momo" ? "Mobile Money" : "Cash on delivery"}</p>
+            <p>{order.paymentMethod === "momo" ? "Mobile Money" : "Cash on delivery"}</p>
           </div>
         </div>
 
@@ -90,7 +158,7 @@ function OrderCard({ order }: { order: Order }) {
 
 function AccountPage() {
   const { user, openLogin, logout } = useAuth();
-  const { orders } = useOrders();
+  const ordersQuery = useMyOrders();
   const navigate = useNavigate();
 
   if (!user) {
@@ -109,10 +177,33 @@ function AccountPage() {
     );
   }
 
-  const myOrders = orders.filter(
-    (o) => (o.userEmail ?? "").toLowerCase() === user.email.toLowerCase()
-  );
-  const totalSpent = myOrders.reduce((sum, o) => sum + o.total, 0);
+  if (ordersQuery.isPending) {
+    return (
+      <section className="mx-auto max-w-7xl px-4 py-8" aria-busy="true">
+        <h1 className="mb-6 text-2xl font-semibold text-slate-800">My account</h1>
+        <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+          <div className="h-52 animate-pulse rounded-lg bg-slate-100" />
+          <div className="space-y-3">
+            {Array.from({ length: 3 }, (_, i) => (
+              <div key={i} className="h-24 animate-pulse rounded-lg bg-slate-100" />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (ordersQuery.isError) {
+    return (
+      <section className="mx-auto max-w-7xl px-4 py-8">
+        <h1 className="mb-6 text-2xl font-semibold text-slate-800">My account</h1>
+        <QueryError message={ordersQuery.error.message} onRetry={() => ordersQuery.refetch()} />
+      </section>
+    );
+  }
+
+  const myOrders = ordersQuery.data;
+  const totalSpent = myOrders.reduce((sum, o) => sum + o.totalAmount, 0);
 
   const handleLogout = () => {
     logout();

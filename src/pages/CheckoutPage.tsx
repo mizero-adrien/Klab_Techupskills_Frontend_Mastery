@@ -1,10 +1,14 @@
-import { useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router";
+import { useForm, useWatch, type RegisterOptions } from "react-hook-form";
+import toast from "react-hot-toast";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import { useOrders } from "../context/OrdersContext";
+import { usePlaceOrder } from "../hooks/useOrders";
+import { ApiError } from "../services/api";
 import { money } from "../utils/money";
-import ProductImage from "../components/ui/ProductsImage";
+import ProductImage from "../components/ui/ProductImage";
+import FormField from "../components/ui/FormField";
+import { useState } from "react";
 
 type FormValues = {
   fullName: string;
@@ -14,76 +18,61 @@ type FormValues = {
   payment: "momo" | "cash";
 };
 
-type FormErrors = Partial<Record<keyof FormValues, string>>;
-
-function validate(values: FormValues): FormErrors {
-  const errors: FormErrors = {};
-  if (values.fullName.trim().length < 2) errors.fullName = "Enter your full name.";
-  const digits = values.phone.replace(/\D/g, "");
-  if (digits.length < 9 || digits.length > 13) errors.phone = "Enter a valid phone number.";
-  if (values.address.trim().length < 5) errors.address = "Enter your delivery address.";
-  if (values.city.trim().length < 2) errors.city = "Enter your city.";
-  return errors;
-}
-
-type FieldProps = {
-  label: string;
-  name: keyof FormValues;
-  value: string;
-  error?: string;
-  placeholder?: string;
-  type?: string;
-  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+const rules: { [K in keyof FormValues]: RegisterOptions<FormValues, K> } = {
+  fullName: {
+    required: "Enter your full name.",
+    minLength: { value: 2, message: "Name must be at least 2 characters." },
+    maxLength: { value: 100, message: "Name must be at most 100 characters." },
+  },
+  phone: {
+    required: "Enter your phone number.",
+    pattern: {
+      value: /^\d{9,13}$/,
+      message: "Enter a valid phone number (9-13 digits).",
+    },
+  },
+  address: {
+    required: "Enter your delivery address.",
+    minLength: { value: 5, message: "Address must be at least 5 characters." },
+    maxLength: { value: 200, message: "Address must be at most 200 characters." },
+  },
+  city: {
+    required: "Enter your city.",
+    minLength: { value: 2, message: "City must be at least 2 characters." },
+    maxLength: { value: 50, message: "City must be at most 50 characters." },
+  },
+  payment: {
+    required: "Choose a payment method.",
+  },
 };
 
-function Field({ label, name, value, error, placeholder, type = "text", onChange }: FieldProps) {
-  return (
-    <div>
-      <label htmlFor={name} className="mb-1 block text-xs font-medium text-slate-600">
-        {label}
-      </label>
-      <input
-        id={name}
-        name={name}
-        type={type}
-        value={value}
-        placeholder={placeholder}
-        onChange={onChange}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? `${name}-error` : undefined}
-        className={`w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-brand ${
-          error ? "border-red-400" : "border-slate-200"
-        }`}
-      />
-      {error && (
-        <p id={`${name}-error`} role="alert" className="mt-1 text-xs text-red-600">
-          {error}
-        </p>
-      )}
-    </div>
-  );
-}
+const inputClass =
+  "w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand aria-[invalid=true]:border-red-400";
 
 function CheckoutPage() {
   const { items, totalItems, totalPrice, clearCart } = useCart();
   const { user, openLogin } = useAuth();
-  const { placeOrder } = useOrders();
+  const placeOrder = usePlaceOrder();
   const navigate = useNavigate();
+  const [serverError, setServerError] = useState("");
 
-  const [values, setValues] = useState<FormValues>({
-    fullName: user?.name ?? "",
-    phone: "",
-    address: "",
-    city: "Kigali",
-    payment: "momo",
+  const {
+    register,
+    handleSubmit,
+    control,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<FormValues>({
+    defaultValues: {
+      fullName: user?.name ?? "",
+      phone: "",
+      address: "",
+      city: "Kigali",
+      payment: "momo",
+    },
   });
-  const [errors, setErrors] = useState<FormErrors>({});
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setValues((current) => ({ ...current, [name]: value }));
-    setErrors((current) => ({ ...current, [name]: undefined }));
-  };
+  const paymentValue = useWatch({ control, name: "payment" });
 
   if (!user) {
     return (
@@ -124,29 +113,45 @@ function CheckoutPage() {
   );
   const savings = originalTotal - totalPrice;
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const onSubmit = async (values: FormValues) => {
+    setServerError("");
+    try {
+      const order = await placeOrder.mutateAsync({
+        items: items.map(({ product, quantity }) => ({ productId: product.id, quantity })),
+        delivery: {
+          fullName: values.fullName.trim(),
+          phone: values.phone.trim(),
+          address: values.address.trim(),
+          city: values.city.trim(),
+        },
+        paymentMethod: values.payment,
+      });
 
-    const found = validate(values);
-    setErrors(found);
-    if (Object.keys(found).length > 0) return;
+      clearCart();
 
-    const orderId = placeOrder({
-  userEmail: user.email,
-  items,
-  total: totalPrice,
-  savings,
-  payment: values.payment,
-  delivery: {
-    fullName: values.fullName.trim(),
-    phone: values.phone.trim(),
-    address: values.address.trim(),
-    city: values.city.trim(),
-  },
-});
+      toast.success("Order placed successfully");
+      navigate(`/order-success/${order._id}`, { replace: true });
+    } catch (error) {
+      if (error instanceof ApiError && error.fieldErrors.length > 0) {
+        for (const fieldError of error.fieldErrors) {
+          if (fieldError.field.startsWith("delivery.")) {
+            const formField = fieldError.field.slice("delivery.".length) as keyof FormValues;
+            if (formField === "fullName" || formField === "phone" || formField === "address" || formField === "city") {
+              setError(formField, { type: "server", message: fieldError.message });
+            }
+          }
+        }
+      }
 
-    navigate(`/order-success/${orderId}`, { replace: true });
-    clearCart();
+      const message =
+        error instanceof ApiError && error.status === 409
+          ? error.message
+          : error instanceof Error
+            ? error.message
+            : "Failed to place order";
+      setServerError(message);
+      toast.error(message);
+    }
   };
 
   return (
@@ -154,7 +159,7 @@ function CheckoutPage() {
       <h1 className="mb-6 text-2xl font-semibold text-slate-800">Checkout</h1>
 
       <form
-        onSubmit={handleSubmit}
+        onSubmit={handleSubmit(onSubmit)}
         noValidate
         className="grid gap-6 lg:grid-cols-[1fr_340px]"
       >
@@ -164,12 +169,46 @@ function CheckoutPage() {
               Delivery details
             </legend>
             <div className="mt-2 grid gap-4 sm:grid-cols-2">
-              <Field label="Full name" name="fullName" value={values.fullName} error={errors.fullName} onChange={handleChange} />
-              <Field label="Phone number" name="phone" type="tel" placeholder="+250 7XX XXX XXX" value={values.phone} error={errors.phone} onChange={handleChange} />
+              <FormField id="fullName" label="Full name" error={errors.fullName?.message}>
+                <input
+                  id="fullName"
+                  type="text"
+                  aria-invalid={errors.fullName ? true : undefined}
+                  className={inputClass}
+                  {...register("fullName", rules.fullName)}
+                />
+              </FormField>
+              <FormField id="phone" label="Phone number" error={errors.phone?.message}>
+                <input
+                  id="phone"
+                  type="tel"
+                  placeholder="+250 7XX XXX XXX"
+                  aria-invalid={errors.phone ? true : undefined}
+                  className={inputClass}
+                  {...register("phone", rules.phone)}
+                />
+              </FormField>
               <div className="sm:col-span-2">
-                <Field label="Address" name="address" placeholder="Street, house number, landmark" value={values.address} error={errors.address} onChange={handleChange} />
+                <FormField id="address" label="Address" error={errors.address?.message}>
+                  <input
+                    id="address"
+                    type="text"
+                    placeholder="Street, house number, landmark"
+                    aria-invalid={errors.address ? true : undefined}
+                    className={inputClass}
+                    {...register("address", rules.address)}
+                  />
+                </FormField>
               </div>
-              <Field label="City" name="city" value={values.city} error={errors.city} onChange={handleChange} />
+              <FormField id="city" label="City" error={errors.city?.message}>
+                <input
+                  id="city"
+                  type="text"
+                  aria-invalid={errors.city ? true : undefined}
+                  className={inputClass}
+                  {...register("city", rules.city)}
+                />
+              </FormField>
             </div>
           </fieldset>
 
@@ -178,27 +217,24 @@ function CheckoutPage() {
               Payment method
             </legend>
             <div className="mt-2 space-y-3">
-              {(
-                [
-                  { value: "momo", title: "Mobile Money", hint: "Pay with your phone when we confirm the order." },
-                  { value: "cash", title: "Cash on delivery", hint: "Pay the courier when your order arrives." },
-                ] as const
-              ).map((option) => (
+              {[
+                { value: "momo" as const, title: "Mobile Money", hint: "Pay with your phone when we confirm the order." },
+                { value: "cash" as const, title: "Cash on delivery", hint: "Pay the courier when your order arrives." },
+              ].map((option) => (
                 <label
                   key={option.value}
                   className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 ${
-                    values.payment === option.value
+                    paymentValue === option.value
                       ? "border-brand bg-brand-soft"
                       : "border-slate-200 hover:border-brand"
                   }`}
                 >
                   <input
                     type="radio"
-                    name="payment"
                     value={option.value}
-                    checked={values.payment === option.value}
-                    onChange={handleChange}
+                    aria-invalid={errors.payment ? true : undefined}
                     className="mt-1 accent-brand"
+                    {...register("payment", rules.payment)}
                   />
                   <span>
                     <span className="block text-sm font-medium text-slate-800">{option.title}</span>
@@ -207,6 +243,11 @@ function CheckoutPage() {
                 </label>
               ))}
             </div>
+            {errors.payment && (
+              <p role="alert" className="mt-2 text-xs text-red-600">
+                {errors.payment.message}
+              </p>
+            )}
           </fieldset>
         </div>
 
@@ -246,12 +287,24 @@ function CheckoutPage() {
             </div>
           </dl>
 
+          {serverError && (
+            <p role="alert" className="mt-3 rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">
+              {serverError}
+            </p>
+          )}
+
           <button
             type="submit"
-            className="mt-5 w-full rounded-md bg-brand py-2.5 text-sm font-medium text-white hover:opacity-90"
+            disabled={isSubmitting || placeOrder.isPending}
+            className="mt-5 w-full rounded-md bg-brand py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Place order
+            {isSubmitting || placeOrder.isPending ? "Placing order..." : "Place order"}
           </button>
+          {(isSubmitting || placeOrder.isPending) && (
+            <p className="mt-2 text-xs text-slate-500">
+              This can take a moment if the backend is waking up.
+            </p>
+          )}
           <Link
             to="/cart"
             className="mt-3 block text-center text-xs font-medium text-brand hover:underline"

@@ -12,6 +12,7 @@ export type Product = {
   categoryId: string;
   categoryName: string;
   categorySlug: string;
+  createdAt?: string;
 };
 
 export function toProduct(p: ApiProduct): Product {
@@ -28,5 +29,6 @@ export function toProduct(p: ApiProduct): Product {
     categoryId: category?._id ?? (typeof p.category === "string" ? p.category : ""),
     categoryName,
     categorySlug: slugify(categoryName),
+    createdAt: p.createdAt,
   };
 }

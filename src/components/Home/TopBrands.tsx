@@ -1,8 +1,8 @@
 import { Link } from "react-router";
 import { Smartphone } from "lucide-react";
 import SectionHeading from "./SectionHeading";
-import ProductImage from "../ui/ProductsImage";
-import { topBrands } from "../../data/Home";
+import ProductImage from "../ui/ProductImage";
+import { topBrands } from "../../data/marketing";
 
 function TopBrands() {
   return (

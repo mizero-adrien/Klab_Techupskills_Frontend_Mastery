@@ -25,7 +25,7 @@ function HeroBanner() {
 
   return (
     <section className="relative mx-auto mt-4 max-w-7xl px-4">
-      <div className="relative flex min-h-\[280px] items-center overflow-hidden rounded-2xl bg-[#1f2547] px-16 py-14 text-white">
+      <div className="relative flex min-h-[280px] items-center overflow-hidden rounded-2xl bg-[#1f2547] px-16 py-14 text-white">
         <div className="absolute -right-24 -top-24 h-96 w-96 rounded-full bg-white/5" />
 
         <div className="relative">

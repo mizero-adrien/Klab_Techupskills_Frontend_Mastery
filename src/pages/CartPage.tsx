@@ -3,7 +3,7 @@ import { Minus, Plus, Trash2 } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { money } from "../utils/money";
-import ProductImage from "../components/ui/ProductsImage";
+import ProductImage from "../components/ui/ProductImage";
 
 function CartPage() {
   const { items, totalItems, totalPrice, changeQuantity, removeFromCart } = useCart();

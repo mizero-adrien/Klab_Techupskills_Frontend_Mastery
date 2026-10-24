@@ -1,13 +1,20 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ApiError } from "../services/api";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type InfiniteData,
+} from "@tanstack/react-query";
 import { orderService, type CreateOrderBody } from "../services/orderService";
-import { toAdminOrdersResult, toOrder, toOrders } from "../lib/toOrders";
+import { toAdminOrdersView, toOrder, toOrders, type AdminOrdersView } from "../lib/toOrders";
 import { queryKeys } from "../lib/queryKeys";
-import type { OrderStatus } from "../types/product";
+import type { ApiAdminOrdersPage, ApiOrder, OrderStatus } from "../types/order";
+
+// ---------- Queries ----------
 
 export function useMyOrders() {
   return useQuery({
-    queryKey: queryKeys.orders.list(),
+    queryKey: queryKeys.orders.mine(),
     queryFn: ({ signal }) => orderService.getMyOrders(signal),
     select: toOrders,
     staleTime: 30 * 1000,
@@ -20,27 +27,6 @@ export function useOrder(id: string | undefined) {
     queryFn: ({ signal }) => orderService.getOrder(id as string, signal),
     select: toOrder,
     enabled: Boolean(id),
-    retry: (failureCount, error) =>
-      !(error instanceof ApiError && error.status === 404) && failureCount < 2,
-  });
-}
-
-export function useAdminOrders(params: {
-  status?: OrderStatus;
-  page?: number;
-  limit?: number;
-  q?: string;
-}) {
-  const page = params.page ?? 1;
-  const limit = params.limit ?? 20;
-  const status = params.status;
-  const q = params.q?.trim() ?? "";
-
-  return useQuery({
-    queryKey: queryKeys.orders.admin({ status, page, limit, q }),
-    queryFn: ({ signal }) => orderService.getAllOrders({ status, page, limit, q }, signal),
-    select: toAdminOrdersResult,
-    staleTime: 30 * 1000,
   });
 }
 
@@ -50,50 +36,94 @@ export function useAdminOrder(id: string | undefined) {
     queryFn: ({ signal }) => orderService.getOrderAdmin(id as string, signal),
     select: toOrder,
     enabled: Boolean(id),
-    retry: (failureCount, error) =>
-      !(error instanceof ApiError && error.status === 404) && failureCount < 2,
   });
 }
 
-export function usePlaceOrder() {
+type AdminOrdersFilters = {
+  status?: OrderStatus;
+  q?: string;
+  limit?: number;
+};
+
+const selectAdminOrders = (data: InfiniteData<ApiAdminOrdersPage, number>): AdminOrdersView =>
+  toAdminOrdersView(data.pages);
+
+export function useAdminOrders({ status, q = "", limit = 20 }: AdminOrdersFilters = {}) {
+  const search = q.trim();
+
+  return useInfiniteQuery({
+    queryKey: queryKeys.orders.adminList({ status, q: search, limit }),
+    queryFn: ({ pageParam, signal }) =>
+      orderService.getAllOrders({ status, q: search, page: pageParam, limit }, signal),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page * lastPage.limit < lastPage.total ? lastPage.page + 1 : undefined,
+    select: selectAdminOrders,
+    staleTime: 30 * 1000,
+  });
+}
+
+// ---------- Mutations ----------
+
+// Orders and stock change together, so every order change refreshes both caches
+function useRefreshAfterOrderChange() {
   const queryClient = useQueryClient();
 
+  return () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.all }),
+    ]);
+}
+
+export function usePlaceOrder() {
+  const refresh = useRefreshAfterOrderChange();
+
   return useMutation({
-    mutationFn: (body: CreateOrderBody) => orderService.createOrder(body),
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: queryKeys.orders.all }),
-        queryClient.invalidateQueries({ queryKey: queryKeys.products.all }),
-      ]);
-    },
+    mutationFn: async (body: CreateOrderBody) => toOrder(await orderService.createOrder(body)),
+    onSuccess: refresh,
+  });
+}
+
+export function useCancelOrder() {
+  const refresh = useRefreshAfterOrderChange();
+
+  return useMutation({
+    mutationFn: async (id: string) => toOrder(await orderService.cancelOrder(id)),
+    onSuccess: refresh,
   });
 }
 
 export function useUpdateOrderStatus() {
   const queryClient = useQueryClient();
+  const refresh = useRefreshAfterOrderChange();
 
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: OrderStatus }) =>
-      orderService.updateOrderStatus(id, status),
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: queryKeys.orders.all }),
-        queryClient.invalidateQueries({ queryKey: queryKeys.products.all }),
-      ]);
-    },
-  });
-}
+    mutationFn: async ({ id, status }: { id: string; status: OrderStatus }) =>
+      toOrder(await orderService.updateOrderStatus(id, status)),
 
-export function useCancelOrder() {
-  const queryClient = useQueryClient();
+    // 1. Before the request: show the new status immediately
+    onMutate: async ({ id, status }) => {
+      const key = queryKeys.orders.adminDetail(id);
 
-  return useMutation({
-    mutationFn: (id: string) => orderService.cancelOrder(id),
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: queryKeys.orders.all }),
-        queryClient.invalidateQueries({ queryKey: queryKeys.products.all }),
-      ]);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<ApiOrder>(key);
+
+      if (previous) {
+        queryClient.setQueryData<ApiOrder>(key, { ...previous, status });
+      }
+
+      return { previous };
     },
+
+    // 2. If the server refuses: put the old order back
+    onError: (_error, { id }, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(queryKeys.orders.adminDetail(id), context.previous);
+      }
+    },
+
+    // 3. Either way: sync with the server's real data
+    onSettled: refresh,
   });
 }

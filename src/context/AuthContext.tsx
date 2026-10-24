@@ -6,9 +6,11 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { authService } from "../services/authService";
 import { AUTH_TOKEN_KEY, AUTH_UNAUTHORIZED_EVENT, AUTH_USER_KEY } from "../constants/auth";
+import { queryKeys } from "../lib/queryKeys";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import type { Credentials, SignUpData, User } from "../types/auth";
 
@@ -26,6 +28,7 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [storedUser, setStoredUser] = useLocalStorage<User | null>(AUTH_USER_KEY, null);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
 
@@ -36,8 +39,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const openLogin = useCallback(() => setIsLoginOpen(true), []);
   const closeLogin = useCallback(() => setIsLoginOpen(false), []);
 
+  // Orders belong to one person. Remove them from the cache so nobody
+  // ever sees the previous user's orders, even for a moment.
+  const clearPrivateData = useCallback(() => {
+    queryClient.removeQueries({ queryKey: queryKeys.orders.all });
+  }, [queryClient]);
+
   const login = async (credentials: Credentials) => {
     const { token, user: signedInUser } = await authService.login(credentials);
+    clearPrivateData();
     localStorage.setItem(AUTH_TOKEN_KEY, token);
     setStoredUser(signedInUser);
     setIsLoginOpen(false);
@@ -51,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     localStorage.removeItem(AUTH_TOKEN_KEY);
     setStoredUser(null);
+    clearPrivateData();
   };
 
   useEffect(() => {
@@ -61,13 +72,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       localStorage.removeItem(AUTH_TOKEN_KEY);
       setStoredUser(null);
+      clearPrivateData();
       toast.error("Your session expired. Please sign in again.");
       setIsLoginOpen(true);
     };
 
     window.addEventListener(AUTH_UNAUTHORIZED_EVENT, onUnauthorized);
     return () => window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, onUnauthorized);
-  }, [setStoredUser]);
+  }, [setStoredUser, clearPrivateData]);
 
   return (
     <AuthContext.Provider

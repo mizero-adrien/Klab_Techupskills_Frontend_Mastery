@@ -26,7 +26,7 @@ function GlobalLoadingBar() {
     <div
       role="progressbar"
       aria-label="Loading"
-      className="pointer-events-none fixed inset-x-0 top-0 z-\[60] h-1 overflow-hidden bg-brand/20"
+      className="pointer-events-none fixed inset-x-0 top-0 z-[60] h-1 overflow-hidden bg-brand/20"
     >
       <div className="h-full w-1/3 animate-[loading-bar_1s_ease-in-out_infinite] bg-brand" />
     </div>

@@ -1,20 +1,32 @@
 import api from "./api";
-import type { ApiAdminOrdersResponse, ApiOrder, OrderStatus } from "../types/product";
+import type {
+  ApiAdminOrdersPage,
+  ApiOrder,
+  Delivery,
+  OrderStatus,
+  PaymentMethod,
+} from "../types/order";
 
 export type CreateOrderBody = {
   items: { productId: string; quantity: number }[];
-  delivery: { fullName: string; phone: string; address: string; city: string };
-  paymentMethod: "momo" | "cash";
+  delivery: Delivery;
+  paymentMethod: PaymentMethod;
 };
 
-export type AdminOrdersParams = {
+export type AdminOrdersQuery = {
   status?: OrderStatus;
+  q?: string;
   page: number;
   limit: number;
-  q: string;
 };
 
 export const orderService = {
+  // Customer
+  createOrder: async (body: CreateOrderBody): Promise<ApiOrder> => {
+    const response = await api.post<ApiOrder>("/orders", body);
+    return response.data;
+  },
+
   getMyOrders: async (signal?: AbortSignal): Promise<ApiOrder[]> => {
     const response = await api.get<ApiOrder[]>("/orders", { signal });
     return response.data;
@@ -25,22 +37,18 @@ export const orderService = {
     return response.data;
   },
 
-  createOrder: async (body: CreateOrderBody): Promise<ApiOrder> => {
-    const response = await api.post<ApiOrder>("/orders", body);
-    return response.data;
-  },
-
   cancelOrder: async (id: string): Promise<ApiOrder> => {
     const response = await api.patch<ApiOrder>(`/orders/${id}/cancel`);
     return response.data;
   },
 
+  // Admin
   getAllOrders: async (
-    params: AdminOrdersParams,
+    { status, q, page, limit }: AdminOrdersQuery,
     signal?: AbortSignal
-  ): Promise<ApiAdminOrdersResponse> => {
-    const response = await api.get<ApiAdminOrdersResponse>("/orders/admin/all", {
-      params,
+  ): Promise<ApiAdminOrdersPage> => {
+    const response = await api.get<ApiAdminOrdersPage>("/orders/admin/all", {
+      params: { status, q: q || undefined, page, limit },
       signal,
     });
     return response.data;

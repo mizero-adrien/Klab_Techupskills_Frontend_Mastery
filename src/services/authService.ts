@@ -12,4 +12,13 @@ export const authService = {
     const response = await api.post<User>("/auth/register", data);
     return response.data;
   },
+
+  // The server always replies 200, whether or not the email exists
+  forgotPassword: async (email: string): Promise<void> => {
+    await api.post("/auth/forgot-password", { email });
+  },
+
+  resetPassword: async (token: string, password: string): Promise<void> => {
+    await api.post(`/auth/reset-password/${encodeURIComponent(token)}`, { password });
+  },
 };

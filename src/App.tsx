@@ -9,6 +9,8 @@ import CategoriesPage from "./pages/CategoriesPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import OrderSuccessPage from "./pages/OrderSuccessPage";
 import AccountPage from "./pages/AccountPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import RequireAdmin from "./components/auth/RequireAdmin";
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
@@ -33,6 +35,8 @@ function App() {
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/order-success/:id" element={<OrderSuccessPage />} />
         <Route path="/account" element={<AccountPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
 

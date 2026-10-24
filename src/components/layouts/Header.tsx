@@ -1,15 +1,35 @@
+import { useState } from "react";
 import { Link, useSearchParams } from "react-router";
-import { Menu, ShoppingCart, User } from "lucide-react";
+import {
+  Home,
+  LayoutDashboard,
+  LayoutGrid,
+  LogIn,
+  LogOut,
+  Menu,
+  ShoppingBag,
+  ShoppingCart,
+  User,
+  UserRound,
+  X,
+} from "lucide-react";
 import { BRAND_NAME } from "../../config/brand";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
 import SearchBar from "./SearchBar";
+import UserMenu from "./UserMenu";
+
+const mobileItem =
+  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-brand-soft hover:text-brand";
 
 function Header() {
   const { totalItems } = useCart();
   const { user, isAdmin, openLogin, logout } = useAuth();
   const [searchParams] = useSearchParams();
+  const [menuOpen, setMenuOpen] = useState(false);
   const urlQuery = searchParams.get("q") ?? "";
+
+  const closeMenu = () => setMenuOpen(false);
 
   return (
     <header className="border-b border-slate-100 bg-white">
@@ -17,12 +37,15 @@ function Header() {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            aria-label="Open menu"
-            className="rounded-lg bg-brand-soft p-2 text-brand"
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-menu"
+            onClick={() => setMenuOpen((open) => !open)}
+            className="rounded-lg bg-brand-soft p-2 text-brand md:hidden"
           >
-            <Menu size={20} />
+            {menuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
-          <Link to="/" className="text-2xl font-bold text-brand">
+          <Link to="/" onClick={closeMenu} className="text-2xl font-bold text-brand">
             {BRAND_NAME}
           </Link>
         </div>
@@ -33,27 +56,7 @@ function Header() {
 
         <nav className="flex items-center gap-5 text-sm font-semibold max-md:ml-auto">
           {user ? (
-            <div className="flex items-center gap-3">
-              {isAdmin && (
-                <Link
-                  to="/admin"
-                  className="rounded-full bg-brand-soft px-3 py-1 text-xs font-medium text-brand hover:bg-blue-50"
-                >
-                  Admin
-                </Link>
-              )}
-              <Link to="/account" className="flex items-center gap-2 hover:text-brand">
-                <User size={18} className="text-brand" />
-                <span className="hidden sm:inline">Hi, {user.name}</span>
-              </Link>
-              <button
-                type="button"
-                onClick={logout}
-                className="text-xs font-medium text-slate-500 hover:text-brand"
-              >
-                Sign out
-              </button>
-            </div>
+            <UserMenu />
           ) : (
             <button
               type="button"
@@ -80,6 +83,67 @@ function Header() {
           </Link>
         </nav>
       </div>
+
+      {menuOpen && (
+        <div id="mobile-menu" className="border-t border-slate-100 md:hidden">
+          <nav aria-label="Mobile" className="mx-auto grid max-w-7xl gap-1 px-4 py-3">
+            <Link to="/" onClick={closeMenu} className={mobileItem}>
+              <Home size={18} className="text-brand" aria-hidden="true" />
+              Home
+            </Link>
+            <Link to="/products" onClick={closeMenu} className={mobileItem}>
+              <ShoppingBag size={18} className="text-brand" aria-hidden="true" />
+              All products
+            </Link>
+            <Link to="/categories" onClick={closeMenu} className={mobileItem}>
+              <LayoutGrid size={18} className="text-brand" aria-hidden="true" />
+              Categories
+            </Link>
+            <Link to="/cart" onClick={closeMenu} className={mobileItem}>
+              <ShoppingCart size={18} className="text-brand" aria-hidden="true" />
+              Cart{totalItems > 0 ? ` (${totalItems})` : ""}
+            </Link>
+
+            {user ? (
+              <>
+                <Link to="/account" onClick={closeMenu} className={mobileItem}>
+                  <UserRound size={18} className="text-brand" aria-hidden="true" />
+                  My account
+                </Link>
+                {isAdmin && (
+                  <Link to="/admin" onClick={closeMenu} className={mobileItem}>
+                    <LayoutDashboard size={18} className="text-brand" aria-hidden="true" />
+                    Admin dashboard
+                  </Link>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    closeMenu();
+                    logout();
+                  }}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-red-600 hover:bg-red-50"
+                >
+                  <LogOut size={18} aria-hidden="true" />
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  closeMenu();
+                  openLogin();
+                }}
+                className={mobileItem}
+              >
+                <LogIn size={18} className="text-brand" aria-hidden="true" />
+                Sign up / Sign in
+              </button>
+            )}
+          </nav>
+        </div>
+      )}
     </header>
   );
 }

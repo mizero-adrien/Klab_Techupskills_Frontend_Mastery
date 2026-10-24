@@ -20,11 +20,6 @@ body {
   background: #ffffff;
 }
 
-button,
-input {
-  font: inherit;
-}
-
 @theme {
   --color-brand: #008fcc;
   --color-brand-dark: #0074a6;

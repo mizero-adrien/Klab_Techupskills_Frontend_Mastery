@@ -40,25 +40,37 @@ function CartPage() {
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <ul className="divide-y divide-slate-100 self-start rounded-lg border border-slate-100">
           {items.map(({ product, quantity }) => (
-            <li key={product.id} className="flex items-center gap-4 p-4">
+            <li
+              key={product.id}
+              className="flex flex-wrap items-center gap-x-3 gap-y-3 p-3 sm:flex-nowrap sm:gap-4 sm:p-4"
+            >
               <ProductImage
                 src={product.image}
                 alt=""
                 iconSize={24}
-                className="h-16 w-16 shrink-0 rounded-md bg-slate-100 p-1"
+                className="order-1 h-14 w-14 shrink-0 rounded-md bg-slate-100 p-1 sm:h-16 sm:w-16"
               />
 
-              <div className="flex-1">
+              <div className="order-2 min-w-0 flex-1">
                 <Link
                   to={`/products/${product.id}`}
-                  className="text-sm font-medium text-slate-800 hover:text-brand"
+                  className="line-clamp-2 text-sm font-medium text-slate-800 hover:text-brand"
                 >
                   {product.name}
                 </Link>
                 <p className="text-xs text-slate-500">{money(product.price)} each</p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <button
+                type="button"
+                aria-label={`Remove ${product.name}`}
+                onClick={() => removeFromCart(product.id)}
+                className="order-3 shrink-0 text-slate-400 hover:text-red-500 sm:order-5"
+              >
+                <Trash2 size={16} />
+              </button>
+
+              <div className="order-4 flex items-center gap-2 sm:order-3">
                 <button
                   type="button"
                   aria-label={`Decrease quantity of ${product.name}`}
@@ -78,18 +90,9 @@ function CartPage() {
                 </button>
               </div>
 
-              <p className="w-28 text-right text-sm font-semibold text-slate-900">
+              <p className="order-5 ml-auto text-right text-sm font-semibold text-slate-900 sm:order-4 sm:ml-0 sm:w-28">
                 {money(product.price * quantity)}
               </p>
-
-              <button
-                type="button"
-                aria-label={`Remove ${product.name}`}
-                onClick={() => removeFromCart(product.id)}
-                className="text-slate-400 hover:text-red-500"
-              >
-                <Trash2 size={16} />
-              </button>
             </li>
           ))}
         </ul>

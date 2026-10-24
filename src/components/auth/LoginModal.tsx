@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { Link } from "react-router";
 import { useForm, type RegisterOptions } from "react-hook-form";
 import { X } from "lucide-react";
 import toast from "react-hot-toast";
@@ -182,6 +183,18 @@ function LoginDialog() {
               {...register("password", mode === "signup" ? signupPasswordRules : signinPasswordRules)}
             />
           </Field>
+
+          {mode === "signin" && (
+            <div className="text-right">
+              <Link
+                to="/forgot-password"
+                onClick={closeLogin}
+                className="text-xs font-medium text-brand hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
+          )}
 
           {serverError && (
             <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">

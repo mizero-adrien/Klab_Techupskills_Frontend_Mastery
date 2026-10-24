@@ -1,4 +1,10 @@
-import type { OrderStatus } from "../types/product";
+import type { OrderStatus } from "../types/order";
+
+export type AdminOrderFilters = {
+  status?: OrderStatus;
+  q: string;
+  limit: number;
+};
 
 export const queryKeys = {
   products: {
@@ -12,10 +18,11 @@ export const queryKeys = {
   },
   orders: {
     all: ["orders"] as const,
-    list: () => [...queryKeys.orders.all, "list"] as const,
+    mine: () => [...queryKeys.orders.all, "mine"] as const,
     detail: (id: string) => [...queryKeys.orders.all, "detail", id] as const,
-    admin: (params: { status?: OrderStatus; page: number; limit: number; q: string }) =>
-      [...queryKeys.orders.all, "admin", params] as const,
+    adminLists: () => [...queryKeys.orders.all, "admin", "list"] as const,
+    adminList: (filters: AdminOrderFilters) =>
+      [...queryKeys.orders.adminLists(), filters] as const,
     adminDetail: (id: string) => [...queryKeys.orders.all, "admin", "detail", id] as const,
   },
 };

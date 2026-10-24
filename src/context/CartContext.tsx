@@ -1,8 +1,16 @@
-import { createContext, useContext, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useReducer,
+  type ReactNode,
+} from "react";
 import type { Product } from "../lib/toProducts";
-import { useLocalStorage } from "../hooks/useLocalStorage";
+import { CART_STORAGE_KEY } from "../constants/cart";
+import { cartReducer, loadCart, type CartItem } from "./cartReducer";
 
-export type CartItem = { product: Product; quantity: number };
+export type { CartItem };
 
 type CartContextValue = {
   items: CartItem[];
@@ -17,44 +25,39 @@ type CartContextValue = {
 const CartContext = createContext<CartContextValue | null>(null);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useLocalStorage<CartItem[]>("cart", []);
+  const [items, dispatch] = useReducer(cartReducer, undefined, loadCart);
 
-  const addToCart = (product: Product, quantity = 1) => {
-    setItems((current) => {
-      const existing = current.find((i) => i.product.id === product.id);
-      if (existing) {
-        return current.map((i) =>
-          i.product.id === product.id ? { ...i, quantity: i.quantity + quantity } : i
-        );
-      }
-      return [...current, { product, quantity }];
-    });
-  };
+  useEffect(() => {
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    } catch {
+      // Storage can be full or blocked. The cart still works in memory.
+    }
+  }, [items]);
 
-  const changeQuantity = (id: string, delta: number) => {
-    setItems((current) =>
-      current
-        .map((i) => (i.product.id === id ? { ...i, quantity: i.quantity + delta } : i))
-        .filter((i) => i.quantity > 0)
-    );
-  };
-
-  const removeFromCart = (id: string) => {
-    setItems((current) => current.filter((i) => i.product.id !== id));
-  };
-
-  const clearCart = () => setItems([]);
-
-  const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
-  const totalPrice = items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
-
-  return (
-    <CartContext.Provider
-      value={{ items, addToCart, changeQuantity, removeFromCart, clearCart, totalItems, totalPrice }}
-    >
-      {children}
-    </CartContext.Provider>
+  // dispatch never changes, so these functions keep the same identity forever
+  const actions = useMemo(
+    () => ({
+      addToCart: (product: Product, quantity = 1) => dispatch({ type: "ADD", product, quantity }),
+      changeQuantity: (id: string, delta: number) =>
+        dispatch({ type: "CHANGE_QUANTITY", id, delta }),
+      removeFromCart: (id: string) => dispatch({ type: "REMOVE", id }),
+      clearCart: () => dispatch({ type: "CLEAR" }),
+    }),
+    []
   );
+
+  const value = useMemo<CartContextValue>(
+    () => ({
+      items,
+      ...actions,
+      totalItems: items.reduce((sum, item) => sum + item.quantity, 0),
+      totalPrice: items.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
+    }),
+    [items, actions]
+  );
+
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
 export function useCart() {

@@ -1,69 +1,91 @@
-import type { ApiOrder, ApiOrderItem, ApiDelivery, ApiAdminOrdersResponse, OrderStatus } from "../types/product";
+import type {
+  ApiAdminOrdersPage,
+  ApiOrder,
+  ApiOrderItem,
+  Delivery,
+  OrderStatus,
+  PaymentMethod,
+} from "../types/order";
 
 export type OrderItem = {
-  productId: string;
-  productName: string;
-  productImage?: string;
+  productId: string | null;
+  name: string;
+  image?: string;
+  unitPrice: number;
   quantity: number;
-  priceAtPurchase: number;
+  lineTotal: number;
 };
-
-export type Delivery = ApiDelivery;
 
 export type Order = {
   id: string;
-  userId: string;
-  userName: string;
-  userEmail: string;
+  reference: string;
+  customerName: string;
+  customerEmail: string;
   items: OrderItem[];
-  totalAmount: number;
-  status: "pending" | "paid" | "shipped" | "delivered" | "cancelled";
+  itemCount: number;
+  total: number;
+  status: OrderStatus;
   delivery: Delivery;
-  paymentMethod: "momo" | "cash";
+  payment: PaymentMethod;
   createdAt: string;
-  updatedAt: string;
 };
 
-export type AdminOrdersResult = {
-  items: Order[];
+export type AdminOrdersView = {
+  orders: Order[];
   total: number;
-  page: number;
-  limit: number;
   statusCounts: Record<OrderStatus, number>;
   totalRevenue: number;
   pendingOrders: number;
 };
 
-export const toOrderItem = (item: ApiOrderItem): OrderItem => ({
-  productId: item.product,
-  productName: item.productName,
-  productImage: item.productImage,
-  quantity: item.quantity,
-  priceAtPurchase: item.priceAtPurchase,
-});
+const productIdOf = (product: ApiOrderItem["product"]): string | null => {
+  if (product === null) return null;
+  return typeof product === "string" ? product : product._id;
+};
 
-export const toOrder = (order: ApiOrder): Order => ({
-  id: order._id,
-  userId: order.user,
-  userName: order.userName,
-  userEmail: order.userEmail,
-  items: order.items.map(toOrderItem),
-  totalAmount: order.totalAmount,
-  status: order.status,
-  delivery: order.delivery,
-  paymentMethod: order.paymentMethod,
-  createdAt: order.createdAt,
-  updatedAt: order.updatedAt,
-});
+export function toOrder(order: ApiOrder): Order {
+  const items: OrderItem[] = order.items.map((item) => ({
+    productId: productIdOf(item.product),
+    name: item.productName,
+    image: item.productImage,
+    unitPrice: item.priceAtPurchase,
+    quantity: item.quantity,
+    lineTotal: item.priceAtPurchase * item.quantity,
+  }));
+
+  return {
+    id: order._id,
+    reference: order._id.slice(-8).toUpperCase(),
+    customerName: order.userName,
+    customerEmail: order.userEmail,
+    items,
+    itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
+    total: order.totalAmount,
+    status: order.status,
+    delivery: order.delivery,
+    payment: order.paymentMethod,
+    createdAt: order.createdAt,
+  };
+}
 
 export const toOrders = (orders: ApiOrder[]): Order[] => orders.map(toOrder);
 
-export const toAdminOrdersResult = (data: ApiAdminOrdersResponse): AdminOrdersResult => ({
-  items: data.items.map(toOrder),
-  total: data.total,
-  page: data.page,
-  limit: data.limit,
-  statusCounts: data.statusCounts,
-  totalRevenue: data.totalRevenue,
-  pendingOrders: data.pendingOrders,
-});
+const NO_ORDERS: Record<OrderStatus, number> = {
+  pending: 0,
+  paid: 0,
+  shipped: 0,
+  delivered: 0,
+  cancelled: 0,
+};
+
+export function toAdminOrdersView(pages: ApiAdminOrdersPage[]): AdminOrdersView {
+  const first = pages[0];
+
+  return {
+    orders: pages.flatMap((page) => page.items.map(toOrder)),
+    total: first?.total ?? 0,
+    statusCounts: first?.statusCounts ?? NO_ORDERS,
+    totalRevenue: first?.totalRevenue ?? 0,
+    pendingOrders: first?.pendingOrders ?? 0,
+  };
+}

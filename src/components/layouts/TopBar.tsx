@@ -4,16 +4,16 @@ import { MapPin, Truck, BadgePercent } from "lucide-react";
 
 function TopBar(){
     return (
-        <div className = "bg-red-300 p-4 text-xs text-white-smoke">
-            <div className= "flex mx-auto max-w-7xl justify-between px-4 py-2">
-                <p>Welcome to {BRAND_NAME}!</p>
-                <div className = "hidden items-center gap-6 sm:flex">
+        <div className = "bg-slate-100 text-xs text-white-smoke">
+            <div className= "mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-2">
+                <p className = "truncate">Welcome to {BRAND_NAME}!</p>
+                <div className = "hidden shrink-0 items-center gap-6 sm:flex">
                     <span className = "flex items-center gap-1">
-                        <MapPin size = {14} className = "text-dark" />
+                        <MapPin size = {14} className = "text-brand" />
                         Deliver to <b className  = "text-slate-700">Kigali</b>
                     </span>
                     <span className = "flex items-center gap-1">
-                        <Truck size = {14} className = "text-dark" />
+                        <Truck size = {14} className = "text-brand" />
                         Track your order
                     </span>
                     <Link to = "/products" className = "flex items-center gap-1 hover:text-brand">

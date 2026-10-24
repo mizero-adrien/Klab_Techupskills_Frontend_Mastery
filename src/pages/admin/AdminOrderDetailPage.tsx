@@ -1,30 +1,18 @@
-import { useMemo } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { useState } from "react";
+import { Link, useParams } from "react-router";
 import toast from "react-hot-toast";
-import AdminPageHeader from "../../components/admin/AdminPageHeader";
+import { ArrowLeft } from "lucide-react";
+import { useAdminOrder, useUpdateOrderStatus } from "../../hooks/useOrders";
+import { ORDER_STATUS_LABELS, PAYMENT_LABELS } from "../../constants/order";
+import { ApiError } from "../../services/api";
+import type { OrderStatus } from "../../types/order";
+import { money } from "../../utils/money";
+import OrderStatusBadge from "../../components/ui/OrderStatusBadge";
 import ProductImage from "../../components/ui/ProductImage";
 import QueryError from "../../components/ui/QueryError";
-import { useAdminOrder, useUpdateOrderStatus } from "../../hooks/useOrders";
-import { money } from "../../utils/money";
-import type { OrderStatus } from "../../types/product";
 
-const STATUS_STYLES: Record<OrderStatus, string> = {
-  pending: "bg-amber-50 text-amber-700",
-  paid: "bg-blue-50 text-blue-700",
-  shipped: "bg-indigo-50 text-indigo-700",
-  delivered: "bg-green-50 text-green-700",
-  cancelled: "bg-red-50 text-red-700",
-};
-
-const STATUS_LABELS: Record<OrderStatus, string> = {
-  pending: "Pending",
-  paid: "Paid",
-  shipped: "Shipped",
-  delivered: "Delivered",
-  cancelled: "Cancelled",
-};
-
-const NEXT_STATUS: Record<OrderStatus, OrderStatus[]> = {
+// Mirrors ALLOWED_TRANSITIONS in order.service.ts. The server enforces it too.
+const NEXT_STATUSES: Record<OrderStatus, OrderStatus[]> = {
   pending: ["paid", "cancelled"],
   paid: ["shipped"],
   shipped: ["delivered"],
@@ -34,162 +22,187 @@ const NEXT_STATUS: Record<OrderStatus, OrderStatus[]> = {
 
 function AdminOrderDetailPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const orderQuery = useAdminOrder(id);
+  const { data: order, isPending, isError, error, refetch } = useAdminOrder(id);
   const updateStatus = useUpdateOrderStatus();
+  const [confirmCancel, setConfirmCancel] = useState(false);
 
-  const availableNext = useMemo(() => {
-    if (!orderQuery.data) return [];
-    return NEXT_STATUS[orderQuery.data.status];
-  }, [orderQuery.data]);
+  const backLink = (
+    <Link
+      to="/admin/orders"
+      className="mb-4 inline-flex items-center gap-1 text-xs font-medium text-brand hover:underline"
+    >
+      <ArrowLeft size={14} />
+      Back to orders
+    </Link>
+  );
 
-  const applyStatus = async (status: OrderStatus) => {
-    if (!orderQuery.data) return;
-
-    if (status === "cancelled") {
-      const confirmed = window.confirm(
-        "Cancel this order? This will restore stock for all items in this order."
-      );
-      if (!confirmed) return;
-    }
-
-    try {
-      await updateStatus.mutateAsync({ id: orderQuery.data.id, status });
-      toast.success("Order status updated.");
-      await orderQuery.refetch();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to update order status");
-    }
-  };
-
-  if (orderQuery.isPending) {
+  if (isPending) {
     return (
-      <div className="animate-pulse space-y-4" aria-busy="true">
-        <div className="h-10 rounded bg-slate-100" />
-        <div className="h-64 rounded bg-slate-100" />
-      </div>
+      <>
+        {backLink}
+        <div className="animate-pulse space-y-4" aria-busy="true">
+          <div className="h-8 w-1/3 rounded bg-slate-100" />
+          <div className="h-64 rounded-xl bg-slate-100" />
+        </div>
+      </>
     );
   }
 
-  if (orderQuery.isError) {
-    return <QueryError message={orderQuery.error.message} onRetry={() => orderQuery.refetch()} />;
+  if (isError) {
+    const notFound = error instanceof ApiError && error.status === 404;
+
+    return (
+      <>
+        {backLink}
+        {notFound ? (
+          <p className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center text-sm text-slate-500">
+            That order doesn't exist.
+          </p>
+        ) : (
+          <QueryError message={error.message} onRetry={() => refetch()} />
+        )}
+      </>
+    );
   }
 
-  if (!orderQuery.data) return null;
+  const nextStatuses = NEXT_STATUSES[order.status];
 
-  const order = orderQuery.data;
-  const itemCount = order.items.reduce((sum, item) => sum + item.quantity, 0);
-  const created = new Date(order.createdAt).toLocaleString("en-RW", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
+  const changeStatus = async (status: OrderStatus) => {
+    try {
+      await updateStatus.mutateAsync({ id: order.id, status });
+      toast.success(`Order marked as ${ORDER_STATUS_LABELS[status].toLowerCase()}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not update the order");
+    } finally {
+      setConfirmCancel(false);
+    }
+  };
 
   return (
     <>
-      <AdminPageHeader
-        title={`Order ${order.id.slice(-8).toUpperCase()}`}
-        description={`${created} · ${itemCount} ${itemCount === 1 ? "item" : "items"}`}
-        actions={
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:border-brand hover:text-brand"
-          >
-            Back
-          </button>
-        }
-      />
+      {backLink}
+
+      <div className="mb-6 flex flex-wrap items-center gap-3">
+        <h1 className="text-2xl font-semibold text-slate-800">Order {order.reference}</h1>
+        <OrderStatusBadge status={order.status} />
+        <p className="text-sm text-slate-500">
+          {new Date(order.createdAt).toLocaleString("en-RW", {
+            dateStyle: "medium",
+            timeStyle: "short",
+          })}
+        </p>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <div className="space-y-6">
-          <section className="rounded-xl border border-slate-200 bg-white">
-            <h2 className="border-b border-slate-100 px-5 py-4 text-sm font-semibold text-slate-800">
-              Items
-            </h2>
-            <ul className="divide-y divide-slate-100">
-              {order.items.map((item) => (
-                <li key={item.productId} className="flex items-center gap-3 px-5 py-3">
-                  <ProductImage
-                    src={item.productImage}
-                    alt=""
-                    iconSize={18}
-                    className="h-10 w-10 shrink-0 rounded-md bg-slate-100 p-0.5"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-slate-800">{item.productName}</p>
-                    <p className="text-xs text-slate-500">Qty {item.quantity}</p>
-                  </div>
-                  <p className="text-sm font-semibold text-slate-900">
-                    {money(item.priceAtPurchase * item.quantity)}
+        <section className="rounded-xl border border-slate-200 bg-white">
+          <h2 className="border-b border-slate-100 px-5 py-4 text-sm font-semibold text-slate-800">
+            Items ({order.itemCount})
+          </h2>
+          <ul className="divide-y divide-slate-100">
+            {order.items.map((item) => (
+              <li key={item.productId ?? item.name} className="flex items-center gap-3 px-5 py-3">
+                <ProductImage
+                  src={item.image}
+                  alt=""
+                  iconSize={20}
+                  className="h-12 w-12 shrink-0 rounded-md bg-slate-100 p-1"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-slate-800">{item.name}</p>
+                  <p className="text-xs text-slate-500">
+                    {money(item.unitPrice)} × {item.quantity}
                   </p>
-                </li>
-              ))}
-            </ul>
-            <div className="flex justify-between border-t border-slate-100 px-5 py-4 text-sm font-semibold text-slate-900">
-              <span>Total</span>
-              <span>{money(order.totalAmount)}</span>
-            </div>
-          </section>
+                </div>
+                <p className="text-sm font-semibold text-slate-900">{money(item.lineTotal)}</p>
+              </li>
+            ))}
+          </ul>
+          <div className="flex justify-between border-t border-slate-100 px-5 py-4 text-base font-semibold text-slate-900">
+            <span>Total</span>
+            <span>{money(order.total)}</span>
+          </div>
+        </section>
 
+        <div className="space-y-6 self-start">
           <section className="rounded-xl border border-slate-200 bg-white p-5">
-            <h2 className="text-sm font-semibold text-slate-800">Delivery details</h2>
-            <div className="mt-3 text-sm text-slate-600">
-              <p className="font-medium text-slate-800">{order.delivery.fullName}</p>
-              <p>{order.delivery.phone}</p>
-              <p>{order.delivery.address}</p>
-              <p>{order.delivery.city}</p>
-            </div>
-          </section>
-        </div>
+            <h2 className="text-sm font-semibold text-slate-800">Update status</h2>
 
-        <aside className="space-y-4 self-start">
-          <section className="rounded-xl border border-slate-200 bg-white p-5">
-            <h2 className="text-sm font-semibold text-slate-800">Customer</h2>
-            <p className="mt-2 text-sm font-medium text-slate-800">{order.userName}</p>
-            <p className="text-sm text-slate-600">{order.userEmail}</p>
-          </section>
-
-          <section className="rounded-xl border border-slate-200 bg-white p-5">
-            <h2 className="text-sm font-semibold text-slate-800">Payment</h2>
-            <p className="mt-2 text-sm text-slate-600">
-              {order.paymentMethod === "momo" ? "Mobile Money" : "Cash on delivery"}
-            </p>
-          </section>
-
-          <section className="rounded-xl border border-slate-200 bg-white p-5">
-            <h2 className="text-sm font-semibold text-slate-800">Status</h2>
-            <div className="mt-2 flex items-center gap-2">
-              <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[order.status]}`}>
-                {STATUS_LABELS[order.status]}
-              </span>
-            </div>
-
-            {availableNext.length > 0 ? (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {availableNext.map((next) => (
-                  <button
-                    key={next}
-                    type="button"
-                    disabled={updateStatus.isPending}
-                    onClick={() => applyStatus(next)}
-                    className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-brand hover:text-brand disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    Mark as {STATUS_LABELS[next]}
-                  </button>
-                ))}
-              </div>
+            {nextStatuses.length === 0 ? (
+              <p className="mt-3 text-sm text-slate-500">
+                This order is {ORDER_STATUS_LABELS[order.status].toLowerCase()}, so its status can no
+                longer change.
+              </p>
             ) : (
-              <p className="mt-3 text-xs text-slate-500">No further status changes allowed.</p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {nextStatuses.map((status) =>
+                  status === "cancelled" ? (
+                    confirmCancel ? (
+                      <div key={status} className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs text-slate-600">
+                          Cancel and return the stock?
+                        </span>
+                        <button
+                          type="button"
+                          disabled={updateStatus.isPending}
+                          onClick={() => changeStatus(status)}
+                          className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          Yes, cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmCancel(false)}
+                          className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-brand"
+                        >
+                          No
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        key={status}
+                        type="button"
+                        disabled={updateStatus.isPending}
+                        onClick={() => setConfirmCancel(true)}
+                        className="rounded-md border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        Cancel order
+                      </button>
+                    )
+                  ) : (
+                    <button
+                      key={status}
+                      type="button"
+                      disabled={updateStatus.isPending}
+                      onClick={() => changeStatus(status)}
+                      className="rounded-md bg-brand px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      Mark as {ORDER_STATUS_LABELS[status].toLowerCase()}
+                    </button>
+                  )
+                )}
+              </div>
             )}
           </section>
 
-          <Link
-            to="/admin/orders"
-            className="inline-block text-sm font-medium text-brand hover:underline"
-          >
-            Back to all orders
-          </Link>
-        </aside>
+          <section className="rounded-xl border border-slate-200 bg-white p-5 text-sm">
+            <h2 className="font-semibold text-slate-800">Customer</h2>
+            <p className="mt-2 text-slate-700">{order.customerName}</p>
+            <a href={`mailto:${order.customerEmail}`} className="text-brand hover:underline">
+              {order.customerEmail}
+            </a>
+
+            <h2 className="mt-5 font-semibold text-slate-800">Delivery</h2>
+            <p className="mt-2 text-slate-600">{order.delivery.fullName}</p>
+            <p className="text-slate-600">{order.delivery.address}</p>
+            <p className="text-slate-600">{order.delivery.city}</p>
+            <a href={`tel:${order.delivery.phone}`} className="text-brand hover:underline">
+              {order.delivery.phone}
+            </a>
+
+            <h2 className="mt-5 font-semibold text-slate-800">Payment</h2>
+            <p className="mt-2 text-slate-600">{PAYMENT_LABELS[order.payment]}</p>
+          </section>
+        </div>
       </div>
     </>
   );

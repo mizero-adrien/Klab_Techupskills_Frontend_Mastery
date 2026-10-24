@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import SectionHeading from "./SectionHeading";
+import ProductImage from "../ui/ProductImage";
 import { useCategories } from "../../hooks/useCategories";
 import { slugify } from "../../utils/slug";
 
@@ -31,8 +32,19 @@ function TopCategories() {
               to={`/products?category=${slugify(category.name)}`}
               className="group flex w-24 shrink-0 flex-col items-center gap-2"
             >
-              <span className="flex h-20 w-20 items-center justify-center rounded-full bg-brand-soft text-2xl font-semibold text-brand transition group-hover:ring-2 group-hover:ring-brand group-hover:ring-offset-2">
-                {category.name.charAt(0).toUpperCase()}
+              <span className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-brand-soft ring-1 ring-slate-100 transition group-hover:ring-2 group-hover:ring-brand group-hover:ring-offset-2">
+                <ProductImage
+                  src={category.imageUrl}
+                  alt=""
+                  fit="cover"
+                  iconSize={32}
+                  className="h-full w-full"
+                  fallback={
+                    <span aria-hidden="true" className="text-2xl font-semibold text-brand">
+                      {category.name.charAt(0).toUpperCase()}
+                    </span>
+                  }
+                />
               </span>
               <span className="line-clamp-2 text-center text-xs text-slate-600 group-hover:text-brand">
                 {category.name}
